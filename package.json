@@ -5,8 +5,8 @@
   "description": "VetaBite — Pemesanan & Antrean Makanan Cerdas Kantin UPN Veteran Jakarta",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:cf": "opennextjs-cloudflare build",
+    "build": "prisma generate && next build",
+    "build:cf": "prisma generate && opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare preview",
     "deploy:cf": "opennextjs-cloudflare deploy",
     "start": "next start",
