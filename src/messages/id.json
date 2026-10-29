@@ -1,0 +1,17 @@
+{
+  "common": {
+    "app": "VetaBite",
+    "login": "Masuk",
+    "register": "Daftar",
+    "logout": "Keluar",
+    "cart": "Keranjang",
+    "search": "Cari",
+    "history": "Riwayat",
+    "profile": "Profil"
+  },
+  "status": {
+    "antrian": "Antrian",
+    "masak": "Dimasak",
+    "siap": "Siap diambil"
+  }
+}

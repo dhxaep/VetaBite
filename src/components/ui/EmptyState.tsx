@@ -1,0 +1,1 @@
+export function EmptyState({title,desc}:{title:string;desc?:string}){ return <div className="glass-panel p-8 text-center"><p className="font-bold">{title}</p>{desc&&<p className="text-sm text-text-muted mt-1">{desc}</p>}</div>; }

@@ -1,0 +1,199 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Role: MAHASISWA | PENJUAL | ADMIN
+// AccountStatus: ACTIVE | PENDING | REJECTED | INACTIVE
+// PaymentMethod: QRIS | TUNAI ; PaymentStatus: BELUM_DIBAYAR | SUDAH_DIBAYAR
+// OrderStatus: ANTRIAN | MASAK | SIAP_AMBIL | PICKED_UP | DIBATALKAN ; TicketStatus: BARU | DIPROSES | SELESAI
+
+model User {
+  id String @id @default(uuid())
+  username String @unique
+  password_hash String
+  full_name String
+  role String @default("MAHASISWA")
+  status String @default("ACTIVE")
+  avatar_url String?
+  language String @default("id")
+  theme String @default("light")
+  whatsapp String?
+  reject_reason String?
+  canteen Canteen? @relation("OwnerCanteen")
+  orders Order[] @relation("BuyerOrders")
+  search_history SearchHistory[]
+  favorites Favorite[]
+  banned_records CanteenBan[] @relation("BannedUser")
+  complaints Complaint[] @relation("UserComplaints")
+  messages ComplaintMessage[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([username])
+
+  @@index([role, status])
+}
+
+model Canteen {
+  id String @id @default(uuid())
+  owner_id String @unique
+  owner User @relation("OwnerCanteen", fields: [owner_id], references: [id], onDelete: Cascade)
+  name String
+  description String?
+  banner_url String?
+  qris_image_url String?
+  is_open Boolean @default(true)
+  queue_prefix String @default("A")
+  menu_items MenuItem[]
+  orders Order[]
+  favorited_by Favorite[]
+  banned_users CanteenBan[]
+  complaints Complaint[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([is_open])
+}
+
+model MenuItem {
+  id String @id @default(uuid())
+  canteen_id String
+  canteen Canteen @relation(fields: [canteen_id], references: [id], onDelete: Cascade)
+  name String
+  description String?
+  photo_url String?
+  price Int
+  category String @default("Makanan")
+  is_available Boolean @default(true)
+  sold_count Int @default(0)
+  is_bestseller Boolean @default(false)
+  order_items OrderItem[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([canteen_id, is_available])
+
+  @@index([canteen_id, category])
+}
+
+model Order {
+  id String @id @default(uuid())
+  canteen_id String
+  canteen Canteen @relation(fields: [canteen_id], references: [id])
+  buyer_id String
+  buyer User @relation("BuyerOrders", fields: [buyer_id], references: [id])
+  queue_number String
+  total_price Int
+  payment_method String @default("QRIS")
+  payment_proof_url String
+  payment_status String @default("BELUM_DIBAYAR")
+  order_status String @default("ANTRIAN")
+  can_pickup Boolean @default(false)
+  estimated_minutes Int @default(15)
+  ordered_at DateTime @default(now())
+  picked_up_at DateTime?
+  order_items OrderItem[]
+  complaints Complaint[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([canteen_id, ordered_at])
+  @@index([canteen_id, order_status])
+  @@index([buyer_id, ordered_at])
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  order_id String
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  menu_item_id String?
+  menu_item MenuItem? @relation(fields: [menu_item_id], references: [id], onDelete: SetNull)
+  name_snapshot String
+  price_snapshot Int
+  qty Int @default(1)
+  note String?
+  created_at DateTime @default(now())
+}
+
+model CanteenBan {
+  id String @id @default(uuid())
+  canteen_id String
+  canteen Canteen @relation(fields: [canteen_id], references: [id], onDelete: Cascade)
+  user_id String
+  user User @relation("BannedUser", fields: [user_id], references: [id], onDelete: Cascade)
+  reason String
+  note String?
+  created_at DateTime @default(now())
+
+  @@unique([canteen_id, user_id])
+
+  @@index([canteen_id])
+}
+
+model Favorite {
+  user_id String
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  canteen_id String
+  canteen Canteen @relation(fields: [canteen_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+
+  @@id([user_id, canteen_id])
+}
+
+model SearchHistory {
+  id String @id @default(uuid())
+  user_id String
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  keyword String
+  created_at DateTime @default(now())
+
+  @@index([user_id, created_at])
+}
+
+model Complaint {
+  id String @id @default(uuid())
+  reporter_id String
+  reporter User @relation("UserComplaints", fields: [reporter_id], references: [id], onDelete: Cascade)
+  reporter_role String
+  canteen_id String?
+  canteen Canteen? @relation(fields: [canteen_id], references: [id], onDelete: SetNull)
+  order_id String?
+  order Order? @relation(fields: [order_id], references: [id], onDelete: SetNull)
+  subject String
+  body String
+  attachment_url String?
+  status String @default("BARU")
+  messages ComplaintMessage[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([status, created_at])
+}
+
+model ComplaintMessage {
+  id String @id @default(uuid())
+  complaint_id String
+  complaint Complaint @relation(fields: [complaint_id], references: [id], onDelete: Cascade)
+  author_id String
+  author User @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  body String
+  created_at DateTime @default(now())
+}
+
+model QueueCounter {
+  id String @id @default(uuid())
+  canteen_id String
+  date String
+  last_number Int @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([canteen_id, date])
+  @@index([canteen_id])
+}

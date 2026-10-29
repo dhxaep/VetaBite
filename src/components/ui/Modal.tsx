@@ -1,0 +1,3 @@
+"use client";
+import { ReactNode } from "react";
+export function Modal({open,onClose,children,title}:{open:boolean;onClose:()=>void;children:ReactNode;title?:string}){ if(!open) return null; return <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="absolute inset-0 bg-black/40" /><div className="glass-panel relative w-full max-w-md p-5" onClick={e=>e.stopPropagation()}>{title&&<h2 className="text-[20px] font-extrabold mb-3">{title}</h2>}{children}</div></div>; }

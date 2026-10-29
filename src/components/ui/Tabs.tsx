@@ -1,0 +1,2 @@
+"use client";
+export function Tabs({tabs,active,onChange}:{tabs:string[];active:number;onChange:(i:number)=>void}){ return <div className="flex gap-2">{tabs.map((t,i)=><button key={t} onClick={()=>onChange(i)} className={i===active?"btn-primary px-4 py-1.5 text-xs ":"glass-panel px-4 py-1.5 text-xs font-bold"}>{t}</button>)}</div>; }

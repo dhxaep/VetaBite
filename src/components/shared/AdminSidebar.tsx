@@ -1,0 +1,3 @@
+import Link from "next/link";
+const items=[["/admin/verifikasi","Verifikasi"],["/admin/stats","Statistik"],["/admin/komplain","Komplain"]];
+export function AdminSidebar(){ return <aside className="glass-panel p-4 w-56 hidden md:block"><ul className="space-y-1">{items.map(([h,l])=><li key={h}><Link href={h} className="block px-3 py-2 text-sm font-bold rounded-sm hover:bg-black/5">{l}</Link></li>)}</ul></aside>; }

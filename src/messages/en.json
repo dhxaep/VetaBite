@@ -1,0 +1,17 @@
+{
+  "common": {
+    "app": "VetaBite",
+    "login": "Sign in",
+    "register": "Sign up",
+    "logout": "Sign out",
+    "cart": "Cart",
+    "search": "Search",
+    "history": "History",
+    "profile": "Profile"
+  },
+  "status": {
+    "antrian": "Queued",
+    "masak": "Cooking",
+    "siap": "Ready"
+  }
+}

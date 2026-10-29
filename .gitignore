@@ -1,0 +1,15 @@
+node_modules/
+.next/
+*.db
+.env
+.env*.local
+.open-next/
+.wrangler/
+public/uploads/*
+!public/uploads/.gitkeep
+dist/
+.DS_Store
+*.log
+*.tsbuildinfo
+
+

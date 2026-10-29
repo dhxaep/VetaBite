@@ -1,0 +1,2 @@
+import { ReactNode } from "react";
+export function Badge({children,tone="antrian"}:{children:ReactNode;tone?:"antrian"|"masak"|"siap"|"danger"|"neutral"}){ const bg=tone==="neutral"?"var(--bg-surface)":"var(--status-"+tone+")"; return <span className="inline-flex items-center rounded-pill px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white" style={{background:String(bg)}}>{children}</span>; }
