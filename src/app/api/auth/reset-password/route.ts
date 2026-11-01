@@ -15,6 +15,10 @@ export async function GET(req: NextRequest) {
     return jsonErr("EXPIRED_OR_INVALID", "Tautan reset password tidak valid atau sudah kadaluarsa (melebihi 15 menit).", 400);
   }
 
+  if (info.userRole?.toLowerCase().includes("mahasiswa")) {
+    return jsonErr("SSO_ACCOUNT", "Akun mahasiswa menggunakan Google SSO (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) dan tidak menggunakan kata sandi lokal.", 403);
+  }
+
   return jsonOk({
     isValid: true,
     userName: info.userName,
@@ -31,6 +35,15 @@ export async function POST(req: NextRequest) {
 
     if (!token) {
       return jsonErr("VALIDATION_ERROR", "Token reset password wajib disertakan.", 400);
+    }
+
+    const info = getResetTokenInfo(token);
+    if (!info) {
+      return jsonErr("EXPIRED_OR_INVALID", "Tautan reset password tidak valid atau sudah kadaluarsa.", 400);
+    }
+
+    if (info.userRole?.toLowerCase().includes("mahasiswa")) {
+      return jsonErr("SSO_ACCOUNT", "Akun mahasiswa menggunakan Google SSO kampus dan tidak menggunakan kata sandi lokal.", 403);
     }
 
     if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {

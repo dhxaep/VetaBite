@@ -503,6 +503,12 @@ export async function consumePasswordResetToken(
     });
 
     if (target) {
+      if (target.role === "MAHASISWA") {
+        return {
+          success: false,
+          message: "Akun mahasiswa terhubung langsung dengan Google SSO kampus (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) dan tidak menggunakan kata sandi lokal.",
+        };
+      }
       await prisma.user.update({
         where: { id: target.id },
         data: { password_hash: hash },

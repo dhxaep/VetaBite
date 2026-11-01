@@ -17,6 +17,7 @@ import {
   Lock,
   ArrowRight,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import type { CivitasUser } from "@/app/api/admin/users/route";
 import type { UserAuditLog } from "@/lib/admin-data";
@@ -139,6 +140,10 @@ export default function AdminUsersPage() {
   };
 
   const handleOpenResetModal = async (user: CivitasUser) => {
+    if (user.role === "MAHASISWA") {
+      alert("Akun mahasiswa terhubung langsung dengan Google SSO Kampus (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) dan tidak menggunakan kata sandi lokal.");
+      return;
+    }
     setGeneratingToken(true);
     try {
       const res = await fetch("/api/admin/users", {
@@ -192,7 +197,7 @@ export default function AdminUsersPage() {
             Kelola User &amp; Akun Civitas
           </h2>
           <p className="text-xs md:text-sm text-text-muted mt-0.5 leading-relaxed max-w-3xl">
-            Monitoring seluruh akun civitas UPN Veteran Jakarta, verifikasi WhatsApp, status penangguhan (banned), serta dispatch reset kata sandi mandiri.
+            Monitoring seluruh akun civitas UPN Veteran Jakarta, verifikasi WhatsApp, status penangguhan (banned), serta dispatch reset kata sandi mandiri mitra kantin (mahasiswa terproteksi via Google SSO).
           </p>
         </div>
         {/* Quick Actions */}
@@ -497,19 +502,30 @@ export default function AdminUsersPage() {
                       {/* Column 5: Aksi Manajemen */}
                       <td className="py-4 px-6 whitespace-nowrap align-middle">
                         <div className="flex items-center justify-center gap-2">
-                          {/* Ubah Password Trigger Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenResetModal(u)}
-                            disabled={generatingToken}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-high hover:bg-primary-fixed text-primary border border-border-specular shadow-sm text-xs font-bold transition-all active:scale-95 group"
-                          >
-                            <KeyRound
-                              size={14}
-                              className="group-hover:rotate-45 transition-transform shrink-0"
-                            />
-                            <span>Ubah Password</span>
-                          </button>
+                          {/* Ubah Password Action: Khusus Mitra Ibu Kantin; Mahasiswa terproteksi via Google SSO */}
+                          {u.role === "PENJUAL" ? (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenResetModal(u)}
+                              disabled={generatingToken}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-high hover:bg-primary-fixed text-primary border border-border-specular shadow-sm text-xs font-bold transition-all active:scale-95 group"
+                              title="Kirim tautan reset kata sandi via WhatsApp"
+                            >
+                              <KeyRound
+                                size={14}
+                                className="group-hover:rotate-45 transition-transform shrink-0"
+                              />
+                              <span>Ubah Password</span>
+                            </button>
+                          ) : (
+                            <div
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low text-text-muted border border-border-subtle text-xs font-semibold select-none shadow-2xs"
+                              title="Akun mahasiswa menggunakan Google SSO kampus (@mahasiswa.upnvj.ac.id) tanpa kata sandi lokal"
+                            >
+                              <ShieldCheck size={13} className="text-primary shrink-0" />
+                              <span>Google SSO</span>
+                            </div>
+                          )}
 
                           {/* Status Toggle Button */}
                           {!isBanned ? (
@@ -657,10 +673,10 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <h3 className="text-base md:text-lg font-bold text-on-surface">
-                  Tautan Reset Password Pengguna
+                  Tautan Reset Password Mitra Ibu Kantin
                 </h3>
                 <p className="text-xs text-text-muted leading-relaxed">
-                  Buat token aman sekali pakai dan kirimkan langsung ke nomor WhatsApp resmi pengguna.
+                  Buat token aman sekali pakai dan kirimkan langsung ke nomor WhatsApp resmi mitra kantin.
                 </p>
               </div>
             </div>

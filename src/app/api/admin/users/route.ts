@@ -182,6 +182,14 @@ export async function POST(req: NextRequest) {
       return jsonErr("NOT_FOUND", "Pengguna tidak ditemukan di database Supabase.", 404);
     }
 
+    if (dbUser.role === "MAHASISWA") {
+      return jsonErr(
+        "FORBIDDEN_SSO_USER",
+        "Akun mahasiswa menggunakan Google SSO kampus (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) dan tidak menggunakan kata sandi lokal. Fitur ubah kata sandi hanya tersedia untuk akun Mitra Ibu Kantin.",
+        403
+      );
+    }
+
     const targetPhone = phone || dbUser.whatsapp || "+62 812-9844-1102";
     const targetName = dbUser.full_name || userName || dbUser.username;
     const token = generatePasswordResetToken(dbUser.id, targetName, userRole || dbUser.role, targetPhone);
