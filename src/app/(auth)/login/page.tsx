@@ -195,46 +195,16 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute top-72 -left-20 w-64 h-64 bg-secondary-container/20 rounded-full blur-3xl z-0" />
         <div className="pointer-events-none absolute bottom-40 -right-20 w-64 h-64 bg-primary-fixed/40 rounded-full blur-3xl z-0" />
 
-        {/* 1. iOS Status Bar */}
-        <header className="relative z-10 w-full pt-3 px-6 flex justify-between items-center text-on-surface">
-          <span className="font-headline-sm text-headline-sm tracking-tight font-extrabold">9:41</span>
-          <div className="flex items-center space-x-2 text-on-surface">
-            {/* Signal Indicator SVG */}
-            <svg className="w-4 h-3.5 fill-current" viewBox="0 0 16 12">
-              <rect height="4" rx="0.5" width="2.5" x="0" y="8" />
-              <rect height="6.5" rx="0.5" width="2.5" x="4.5" y="5.5" />
-              <rect height="9" rx="0.5" width="2.5" x="9" y="3" />
-              <rect height="11.5" rx="0.5" width="2.5" x="13.5" y="0.5" />
-            </svg>
-            {/* Wifi SVG */}
-            <svg className="w-4 h-3.5 fill-current" viewBox="0 0 16 12">
-              <path
-                d="M8 9.5C6.9 9.5 6 10.4 6 11.5S6.9 13.5 8 13.5 10 12.6 10 11.5 9.1 9.5 8 9.5ZM0.5 3.5C2.7 1.3 5.3 0 8 0C10.7 0 13.3 1.3 15.5 3.5L13.7 5.3C12.1 3.7 10.1 2.7 8 2.7C5.9 2.7 3.9 3.7 2.3 5.3L0.5 3.5ZM3.8 6.8C4.9 5.7 6.4 5.1 8 5.1C9.6 5.1 11.1 5.7 12.2 6.8L10.4 8.6C9.8 8 8.9 7.7 8 7.7C7.1 7.7 6.2 8 5.6 8.6L3.8 6.8Z"
-                transform="translate(0 -0.5)"
-              />
-            </svg>
-            {/* Battery SVG */}
-            <svg className="w-6 h-3 fill-current" viewBox="0 0 24 12">
-              <rect fill="none" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.8" width="19" x="1" y="1" />
-              <rect height="6" rx="1.5" width="13" x="3" y="3" />
-              <path d="M22 4.5C22.6 4.5 23 5.1 23 6C23 6.9 22.6 7.5 22 7.5V4.5Z" />
-            </svg>
-          </div>
-        </header>
-
         {/* Top Brand Header Container */}
-        <div className="relative z-10 px-margin pt-3 pb-2 flex items-center justify-between">
+        <div className="relative z-10 px-margin pt-6 pb-2 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* Logo Orb */}
-            <div className="relative w-11 h-11 rounded-full btn-tangy-gradient flex items-center justify-center p-2 shadow-lg">
-              <div className="absolute inset-0 rounded-full border border-white/60 pointer-events-none" />
-              {/* Cutlery & Flame Monogram SVG */}
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path d="M12 2C8.5 6 7 9 7 13a5 5 0 0 0 10 0c0-2-0.5-3.5-2-5.5" />
-                <path d="M12 18v-4" />
-                <path d="M10 14h4" />
-                <path d="M12 7v2" />
-              </svg>
+            <div className="relative w-11 h-11 rounded-2xl bg-white/95 border border-border-specular flex items-center justify-center p-1 shadow-md overflow-hidden shrink-0">
+              <img
+                src="/LOGO.jpeg"
+                alt="Logo VetaBite"
+                className="w-full h-full object-cover rounded-xl"
+              />
             </div>
             <div>
               <div className="flex items-center space-x-1.5">
