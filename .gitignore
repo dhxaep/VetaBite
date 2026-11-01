@@ -11,5 +11,7 @@ dist/
 .DS_Store
 *.log
 *.tsbuildinfo
+client_secret*.json
+*.json.secret
 
 
