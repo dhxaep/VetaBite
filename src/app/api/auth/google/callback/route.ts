@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createSession, setSession, newSession, createSessionToken } from "@/lib/auth";
+import { newSession, createSessionToken } from "@/lib/auth";
 import { getGoogleAdmins, addGoogleAdmin, addAdminAuditLog } from "@/lib/admin-data";
 
 interface GoogleUserInfo {
