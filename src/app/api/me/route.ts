@@ -20,6 +20,7 @@ export async function GET() {
   if (!u) return jsonErr('NOT_FOUND', 'Akun tidak ditemukan.', 404);
   return jsonOk({
     id: u.id,
+    email: u.email,
     username: u.username,
     full_name: u.full_name,
     role: u.role,
@@ -39,6 +40,14 @@ export async function PATCH(req: Request) {
     const b = S.parse(await req.json());
     const u = await prisma.user.findUnique({ where: { id: s.uid } });
     if (!u) return jsonErr('NOT_FOUND', 'Akun tidak ditemukan.', 404);
+
+    if (u.role === "MAHASISWA" && (b.full_name || b.new_password)) {
+      return jsonErr(
+        "FORBIDDEN",
+        "Profil dan keamanan mahasiswa terikat dengan Akun Google Kampus UPNVJ dan tidak dapat diubah.",
+        403
+      );
+    }
 
     const updateData: Record<string, any> = {};
     if (b.full_name !== undefined) updateData.full_name = b.full_name;
