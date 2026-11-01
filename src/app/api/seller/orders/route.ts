@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { ownerCanteen } from '@/lib/owner';
 import { jsonOk, jsonErr } from '@/lib/api';
+import { expireOldPaymentProofs, isPaymentProofExpired } from '@/lib/payment-proof';
 
 export async function GET(req: Request) {
   const s = await getSession();
@@ -9,6 +10,10 @@ export async function GET(req: Request) {
   if (s.role !== 'PENJUAL') return jsonErr('FORBIDDEN', 'Tidak memiliki hak akses.', 403);
   const c = await ownerCanteen(s.uid);
   if (!c) return jsonErr('NOT_FOUND', 'Kantin tidak ditemukan.', 404);
+
+  // Bersihkan bukti transfer yang sudah hangus (2 hari setelah diselesaikan)
+  await expireOldPaymentProofs();
+
   const st = new URL(req.url).searchParams.get('status');
   const allowed = ['MENUNGGU', 'ANTRIAN', 'MASAK', 'SIAP_AMBIL', 'SELESAI', 'DIBATALKAN', 'PICKED_UP'];
   const os = await prisma.order.findMany({
@@ -25,10 +30,13 @@ export async function GET(req: Request) {
 
   const mapped = os.map((o) => {
     const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
+    const isExpired = isPaymentProofExpired(o) || !o.payment_proof_url;
     return {
       ...o,
       buyer_name: o.buyer?.full_name || 'Mahasiswa',
       buyer_nim: nim,
+      payment_proof_url: isExpired ? '' : o.payment_proof_url,
+      proof_expired: isExpired,
       created_at: o.ordered_at ? o.ordered_at.toISOString() : o.created_at.toISOString(),
       items: o.order_items.map((it) => ({
         name: it.name_snapshot,

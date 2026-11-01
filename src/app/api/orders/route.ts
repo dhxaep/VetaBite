@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { jsonOk, jsonErr, zodMsg } from '@/lib/api';
 import { publishCanteen } from '@/lib/sse';
+import { expireOldPaymentProofs, isPaymentProofExpired } from '@/lib/payment-proof';
 
 const S = z.object({
   canteen_id: z.string().min(1, { message: 'Kantin wajib dipilih.' }),
@@ -46,12 +47,17 @@ export async function GET() {
     },
   });
 
+  await expireOldPaymentProofs();
+
   const mapped = os.map((o) => {
     const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
+    const isExpired = isPaymentProofExpired(o) || !o.payment_proof_url;
     return {
       ...o,
       buyer_name: o.buyer?.full_name || 'Mahasiswa',
       buyer_nim: nim,
+      payment_proof_url: isExpired ? '' : o.payment_proof_url,
+      proof_expired: isExpired,
       canteen_name: o.canteen?.name,
       canteen_banner: o.canteen?.banner_url,
       items: o.order_items.map((it) => ({

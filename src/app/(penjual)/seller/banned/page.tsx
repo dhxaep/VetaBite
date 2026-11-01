@@ -16,15 +16,15 @@ import {
   ShieldAlert,
   UserX,
   LockOpen,
-  TriangleAlert,
   CircleCheckBig,
   Loader2,
   AlertCircle,
-  IdCard,
-  UtensilsCrossed,
   Headset,
   X,
   Check,
+  Bell,
+  SlidersHorizontal,
+  Save,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { LoadingList, ErrorBox } from "@/components/States";
@@ -423,52 +423,56 @@ export default function SellerAccountAndBannedPage() {
         onChange={handleAvatarChange}
       />
 
-      {/* Sticky Header (Glass docked) */}
-      <header className="sticky top-0 z-40 bg-surface-glass backdrop-blur-xl border-b border-border-subtle/40 px-4 pt-4 pb-3 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF8A00] to-[#E03A00] p-[2px] shadow-sm flex items-center justify-center">
-              <div className="w-full h-full bg-surface-container-lowest rounded-full flex items-center justify-center text-primary">
-                <UtensilsCrossed className="w-5 h-5 text-primary" />
+      {/* Sticky Header (Glass docked) matching updated Stitch UI */}
+      <header className="sticky top-0 z-40 w-full bg-surface-glass-alt dark:bg-inverse-surface backdrop-blur-md border-b border-border-specular dark:border-border-subtle shadow-sm dark:shadow-none px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-2 border-primary-container/30 overflow-hidden shadow-sm flex-shrink-0 bg-surface-container">
+            {profile.avatar_url ? (
+              <img
+                className="w-full h-full object-cover"
+                src={profile.avatar_url}
+                alt={profile.full_name}
+              />
+            ) : (
+              <div className="w-full h-full bg-[#faede6] flex items-center justify-center font-extrabold text-sm text-primary">
+                {getInitials(profile.full_name)}
               </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-full bg-success" />
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                  {canteen.queue_prefix ? `Loket #${canteen.queue_prefix}` : "Loket Kantin"}
-                </span>
-              </div>
-              <h1 className="text-base font-extrabold text-on-surface leading-tight">
-                {canteen.name || "Kantin UPNVJ"}
-              </h1>
-            </div>
+            )}
           </div>
-          <div className="liquid-glass-pill px-2.5 py-1 rounded-full flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-danger" />
-            <span className="text-[10px] font-bold text-on-surface-variant">Stall Shield</span>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-base font-extrabold text-primary dark:text-inverse-primary tracking-tight">
+                VetaBite
+              </span>
+              <span className="bg-primary/10 text-primary dark:text-primary-fixed-dim text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                Mitra
+              </span>
+            </div>
+            <p className="text-xs text-text-muted dark:text-outline font-semibold">
+              {canteen.queue_prefix ? `Loket #${canteen.queue_prefix}` : "Loket"} {canteen.name}
+            </p>
           </div>
         </div>
-        <div className="pt-1">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-on-surface">Profil &amp; Proteksi</h2>
-            <span className="bg-error-container text-on-error-container px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-              {canteen.queue_prefix ? `Loket #${canteen.queue_prefix} Aktif` : "Loket Aktif"}
-            </span>
-          </div>
-          <p className="text-xs text-text-muted mt-0.5">
-            Kelola profil pemilik, kredensial gerai, serta proteksi pemblokiran NIM mahasiswa.
-          </p>
+        <div className="flex items-center gap-1">
+          <button
+            aria-label="Notifikasi Pesanan"
+            onClick={() => showToast("Pemberitahuan loket aktif")}
+            className="w-10 h-10 relative flex items-center justify-center rounded-full text-primary dark:text-inverse-primary hover:bg-surface-container transition-colors duration-150 active:scale-95"
+            type="button"
+          >
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-danger rounded-full ring-2 ring-white" />
+          </button>
         </div>
       </header>
 
       {/* Scrollable Content Canvas */}
-      <div className="px-4 pt-3 pb-32 flex flex-col gap-4 relative z-10">
+      <div className="px-4 pt-4 space-y-4 relative z-10 pb-8">
         {/* SECTION 1: CANTEEN PROFILE HERO CARD */}
-        <section className="liquid-glass-card rounded-[22px] p-4 flex flex-col gap-3.5">
-          <div className="flex items-start justify-between">
+        <section className="liquid-glass-card rounded-[24px] p-4 relative overflow-hidden border border-border-specular shadow-sm">
+          <div className="flex items-start justify-between gap-3 mb-3.5">
             <div className="flex items-center gap-3.5">
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FF8A00] to-[#E03A00] p-[2.5px] shadow-md flex items-center justify-center">
                   <div className="w-full h-full bg-[#faede6] rounded-full flex items-center justify-center font-extrabold text-[22px] text-primary overflow-hidden">
                     {profile.avatar_url ? (
@@ -503,7 +507,7 @@ export default function SellerAccountAndBannedPage() {
                 <div className="flex items-center gap-1.5 text-xs text-primary font-bold mt-0.5">
                   <Store className="w-3.5 h-3.5 text-primary shrink-0" />
                   <span>
-                    {canteen.name} ({canteen.queue_prefix ? `Loket #${canteen.queue_prefix}` : "Mitra Kantin"})
+                    {canteen.name} ({canteen.queue_prefix ? `Loket #${canteen.queue_prefix}` : "Loket"})
                   </span>
                 </div>
                 <span className="text-[11px] text-text-muted font-mono">@{profile.username}</span>
@@ -512,50 +516,49 @@ export default function SellerAccountAndBannedPage() {
                 </span>
               </div>
             </div>
-            <div className="liquid-glass-pill px-2.5 py-1 rounded-full flex items-center gap-1.5 shrink-0">
+            <div className="liquid-glass-pill px-2.5 py-1 rounded-full flex items-center gap-1.5 flex-shrink-0">
               <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
               <span className="text-[10px] font-bold text-on-surface">Mitra Kantin Aktif</span>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-subtle/40">
-            <div className="bg-surface-container-low/70 rounded-xl p-2.5 border border-border-subtle/50 flex flex-col">
-              <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">
+          <div className="grid grid-cols-2 gap-2 text-center pt-2 border-t border-border-subtle/50">
+            <div className="p-2.5 rounded-[16px] bg-white/50 dark:bg-white/5 border border-white/70">
+              <span className="text-[10px] font-bold uppercase text-text-muted tracking-wider">
                 Status Loket
               </span>
-              <span
-                className={`text-sm font-bold flex items-center gap-1 mt-0.5 ${
-                  canteen.is_open ? "text-success" : "text-amber-600"
-                }`}
-              >
+              <p className="text-sm font-black text-success mt-0.5 flex items-center justify-center gap-1.5">
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    canteen.is_open ? "bg-success" : "bg-amber-600"
+                    canteen.is_open ? "bg-success" : "bg-warning"
                   }`}
                 />
-                {canteen.is_open ? "Buka" : "Tutup"}
-              </span>
+                {canteen.is_open ? "BUKA" : "TUTUP"}
+              </p>
             </div>
-            <div className="bg-surface-container-low/70 rounded-xl p-2.5 border border-border-subtle/50 flex flex-col">
-              <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">
+            <div className="p-2.5 rounded-[16px] bg-white/50 dark:bg-white/5 border border-white/70">
+              <span className="text-[10px] font-bold uppercase text-text-muted tracking-wider">
                 Mahasiswa Diblokir
               </span>
-              <span className="text-sm font-bold text-danger flex items-center gap-1 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-danger" /> {bans.length} Akun
-              </span>
+              <p className="text-sm font-black text-danger mt-0.5 flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-danger" />
+                {bans.length} Akun
+              </p>
             </div>
           </div>
         </section>
 
         {/* SECTION 2: ACCOUNT & SECURITY MANAGEMENT */}
-        <section className="liquid-glass-card rounded-[22px] p-4 flex flex-col gap-3.5">
+        <section className="liquid-glass-card rounded-[24px] p-4 flex flex-col gap-3.5 border border-border-specular shadow-sm">
           <div className="flex items-center justify-between border-b border-border-subtle/50 pb-2.5">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                <Store className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <SlidersHorizontal className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-bold text-on-surface">Ubah Informasi Gerai &amp; Pemilik</h3>
+              <h3 className="text-sm font-extrabold text-on-surface">
+                Ubah Informasi Gerai &amp; Pemilik
+              </h3>
             </div>
-            <span className="text-[10px] font-bold text-text-muted bg-surface-container px-2 py-0.5 rounded-md">
+            <span className="text-[10px] font-bold text-text-muted bg-surface-container px-2 py-0.5 rounded-full">
               Profil
             </span>
           </div>
@@ -571,7 +574,7 @@ export default function SellerAccountAndBannedPage() {
                 value={editFullName}
                 onChange={(e) => setEditFullName(e.target.value)}
                 placeholder="Contoh: Ibu Ariani"
-                className="w-full h-11 px-3.5 rounded-xl bg-white/70 border border-border-specular text-xs font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+                className="w-full h-11 px-3.5 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition"
               />
             </div>
 
@@ -585,7 +588,7 @@ export default function SellerAccountAndBannedPage() {
                 value={editCanteenName}
                 onChange={(e) => setEditCanteenName(e.target.value)}
                 placeholder="Contoh: Ayam Geprek Ariani"
-                className="w-full h-11 px-3.5 rounded-xl bg-white/70 border border-border-specular text-xs font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+                className="w-full h-11 px-3.5 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition"
               />
             </div>
 
@@ -598,7 +601,7 @@ export default function SellerAccountAndBannedPage() {
                 value={editWhatsapp}
                 onChange={(e) => setEditWhatsapp(e.target.value)}
                 placeholder="Contoh: 081298765432"
-                className="w-full h-11 px-3.5 rounded-xl bg-white/70 border border-border-specular text-xs font-mono font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+                className="w-full h-11 px-3.5 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs font-mono font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition"
               />
             </div>
 
@@ -608,20 +611,20 @@ export default function SellerAccountAndBannedPage() {
                 rows={2}
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Spesialis menu kantin dan lokasi meja gerai..."
-                className="w-full p-2.5 rounded-xl bg-white/70 border border-border-specular text-xs font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition resize-none"
+                placeholder="Spesialis ayam geprek sambal korek & cabe ijo kampus UPNVJ."
+                className="w-full p-2.5 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs font-medium text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={savingProfile}
-              className="btn-crimson-block w-full h-11 rounded-full text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md disabled:opacity-50"
+              className="btn-crimson-block w-full h-[46px] rounded-full text-white font-extrabold text-[14px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md cursor-pointer disabled:opacity-50"
             >
               {savingProfile ? (
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
               ) : (
-                <UserCheck className="w-4 h-4 text-white" />
+                <Save className="w-4 h-4 text-white" />
               )}
               <span>{savingProfile ? "Menyimpan Data..." : "Simpan Perubahan Profil & Loket"}</span>
             </button>
@@ -631,7 +634,7 @@ export default function SellerAccountAndBannedPage() {
           <div className="mt-2 pt-3 border-t border-border-subtle/50 flex flex-col gap-2.5">
             <div className="flex items-center gap-1.5">
               <Lock className="w-4 h-4 text-primary" />
-              <h4 className="text-xs font-bold text-on-surface">Keamanan Kata Sandi Loket</h4>
+              <h4 className="text-xs font-extrabold text-on-surface">Keamanan Kata Sandi Loket</h4>
             </div>
 
             <form onSubmit={handleSavePassword} className="space-y-2.5">
@@ -646,7 +649,7 @@ export default function SellerAccountAndBannedPage() {
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
                     placeholder="Kata sandi saat ini"
-                    className="w-full h-10 px-3.5 pr-10 rounded-xl bg-white/70 border border-border-specular text-xs text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+                    className="w-full h-10 px-3.5 pr-10 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition"
                   />
                   <button
                     type="button"
@@ -666,8 +669,8 @@ export default function SellerAccountAndBannedPage() {
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Minimal 6 karakter"
-                    className="w-full h-10 px-3.5 pr-10 rounded-xl bg-white/70 border border-border-specular text-xs text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+                    placeholder="Minimal 8 karakter"
+                    className="w-full h-10 px-3.5 pr-10 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition"
                   />
                   <button
                     type="button"
@@ -690,7 +693,7 @@ export default function SellerAccountAndBannedPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Ulangi kata sandi baru"
-                    className="w-full h-10 px-3.5 pr-10 rounded-xl bg-white/70 border border-border-specular text-xs text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-sm transition"
+                    className="w-full h-10 px-3.5 pr-10 rounded-xl bg-white/70 dark:bg-black/30 border border-border-specular text-xs text-on-surface focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition"
                   />
                   <button
                     type="button"
@@ -705,7 +708,7 @@ export default function SellerAccountAndBannedPage() {
               <button
                 type="submit"
                 disabled={savingPassword}
-                className="w-full h-10 rounded-full border border-primary/40 bg-surface-container-lowest/90 text-primary font-bold text-xs hover:bg-primary hover:text-white transition active:scale-95 flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+                className="w-full h-10 rounded-full border border-primary/40 bg-surface-container-lowest/90 text-primary font-bold text-[13px] hover:bg-primary hover:text-white transition active:scale-95 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
               >
                 {savingPassword ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -721,7 +724,7 @@ export default function SellerAccountAndBannedPage() {
         </section>
 
         {/* SECTION 3: BAN STUDENT BY NIM ONLY */}
-        <section className="liquid-glass-card rounded-[22px] p-4 flex flex-col gap-3.5">
+        <section className="liquid-glass-card rounded-[24px] p-4 flex flex-col gap-3.5 border border-border-specular shadow-sm">
           <div className="flex items-center justify-between border-b border-border-subtle/50 pb-2.5">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-danger/10 text-danger flex items-center justify-center">
@@ -799,7 +802,7 @@ export default function SellerAccountAndBannedPage() {
                       {studentPreview.email || `${studentPreview.nim}@mahasiswa.upnvj.ac.id`}
                     </p>
                     <span className="text-[10px] text-primary font-bold mt-0.5">
-                      Civitas Akademika • Mahasiswa UPNVJ
+                      FIK • S1 Informatika UPNVJ
                     </span>
                   </div>
                 </div>
@@ -855,7 +858,7 @@ export default function SellerAccountAndBannedPage() {
             <button
               type="submit"
               disabled={banning || !nimInput}
-              className="w-full h-11 rounded-full bg-gradient-to-r from-danger to-primary text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md disabled:opacity-50"
+              className="w-full h-11 rounded-full bg-gradient-to-r from-danger to-primary text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md disabled:opacity-50 cursor-pointer"
             >
               {banning ? (
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -926,7 +929,7 @@ export default function SellerAccountAndBannedPage() {
                     <button
                       type="button"
                       onClick={() => setUnbanTarget(b)}
-                      className="self-end px-3 py-1 rounded-full border border-primary/40 bg-surface-container-lowest text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition active:scale-95 flex items-center gap-1 shadow-sm"
+                      className="self-end px-3 py-1 rounded-full border border-primary/40 bg-surface-container-lowest text-primary text-[11px] font-bold hover:bg-primary hover:text-white transition active:scale-95 flex items-center gap-1 shadow-sm cursor-pointer"
                     >
                       <LockOpen className="w-3.5 h-3.5" />
                       <span>Buka Blokir</span>
@@ -939,34 +942,36 @@ export default function SellerAccountAndBannedPage() {
         </section>
 
         {/* SECTION 4: LOGOUT ACTION */}
-        <section className="pt-1 pb-4 flex flex-col items-center">
+        <section className="pt-2 pb-6 flex flex-col items-center">
           <button
             type="button"
             onClick={() => setShowLogoutModal(true)}
-            className="w-full h-12 rounded-full border-2 border-danger/40 bg-surface-container-lowest/80 text-danger font-bold text-xs hover:bg-danger hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+            className="w-full h-[48px] rounded-full border-2 border-danger/40 bg-white/80 dark:bg-white/5 text-danger font-extrabold text-[14px] hover:bg-danger hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-5 h-5" />
             <span>Keluar dari Akun Loket</span>
           </button>
-          <span className="text-[11px] text-text-muted mt-2">
-            VetaBite Kantin UPNVJ • Loket #{canteen.queue_prefix || "01"}
+          <span className="text-[11px] text-text-muted mt-2.5 font-medium">
+            VetaBite Kantin UPNVJ v2.4 • Loket #{canteen.queue_prefix || "01"}
           </span>
         </section>
       </div>
 
-      {/* Floating Customer Service (CS) Button */}
-      <aside className="fixed bottom-24 right-5 sm:absolute sm:bottom-24 sm:right-5 z-40">
+      {/* Floating Customer Service (CS) Button matching Stitch */}
+      <div className="fixed bottom-24 right-4 z-40 max-w-[430px]">
         <button
           onClick={() => setShowCsModal(true)}
-          className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#FF6226] to-[#ad2b00] text-white shadow-xl flex items-center justify-center relative active:scale-90 transition-transform border border-border-specular"
-          title="Hubungi Layanan Pengaduan Canteen Care"
           type="button"
+          aria-label="Pusat Bantuan CS VetaBite"
+          className="relative w-[54px] h-[54px] rounded-full flex items-center justify-center bg-gradient-to-br from-[#FF5722] to-[#B82900] text-white shadow-2xl border-[1.5px] border-white/90 active:scale-95 transition-transform duration-150 group cursor-pointer hover:shadow-primary/40"
         >
-          <Headset className="w-5 h-5 text-white" />
-          {/* Online Dot Indicator */}
-          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-success rounded-full border-2 border-white ring-1 ring-black/10" />
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-success border-2 border-white" />
+          </span>
+          <Headset className="w-6 h-6 text-white drop-shadow" />
         </button>
-      </aside>
+      </div>
 
       {/* Modal Buka Blokir */}
       {unbanTarget && (
@@ -996,7 +1001,7 @@ export default function SellerAccountAndBannedPage() {
                 type="button"
                 disabled={unbanning}
                 onClick={handleExecuteUnban}
-                className="min-h-[40px] rounded-full btn-crimson-block text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1"
+                className="min-h-[40px] rounded-full btn-crimson-block text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1 cursor-pointer"
               >
                 {unbanning ? <Loader2 size={13} className="animate-spin text-white" /> : <Check size={14} />}
                 <span>{unbanning ? "Membuka..." : "Ya, Buka"}</span>
@@ -1080,7 +1085,7 @@ export default function SellerAccountAndBannedPage() {
                 type="button"
                 disabled={loggingOut}
                 onClick={handleLogout}
-                className="min-h-[42px] rounded-full bg-danger text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5"
+                className="min-h-[42px] rounded-full bg-danger text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {loggingOut ? <Loader2 size={14} className="animate-spin text-white" /> : <LogOut size={14} />}
                 <span>{loggingOut ? "Keluar..." : "Ya, Keluar"}</span>

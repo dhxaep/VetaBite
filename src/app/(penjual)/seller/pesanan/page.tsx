@@ -44,6 +44,7 @@ type O = {
   order_status: string;
   items: { name: string; qty: number; note?: string; price?: number }[];
   payment_proof_url?: string;
+  proof_expired?: boolean;
   total_price: number;
   estimated_minutes?: number;
 };
@@ -438,7 +439,7 @@ export default function PesananPage() {
                     <span className="text-[10px] text-text-muted block uppercase">Total Tagihan</span>
                     <span className="text-lg font-extrabold text-primary">Total {formatRupiah(o.total_price)}</span>
                   </div>
-                  {o.payment_proof_url && (
+                  {o.payment_proof_url ? (
                     <button
                       onClick={() => setProof(o)}
                       className="liquid-glass-soft px-3 py-1.5 rounded-xl flex items-center gap-2 active:scale-95 border border-border-specular text-left"
@@ -449,7 +450,12 @@ export default function PesananPage() {
                         <span className="text-[10px] text-primary">Lihat</span>
                       </div>
                     </button>
-                  )}
+                  ) : o.proof_expired ? (
+                    <div className="px-2.5 py-1 rounded-xl bg-surface-container-high/60 border border-border-subtle flex items-center gap-1.5 text-text-muted text-[10px]">
+                      <Clock3 size={12} className="text-text-muted" />
+                      <span>Bukti Hangus (2 Hari)</span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {!paid && tab === "ANTRIAN" && (
@@ -592,9 +598,25 @@ export default function PesananPage() {
                 <X size={18} />
               </button>
             </div>
-            {proof.payment_proof_url && (
-              <div className="w-full h-56 rounded-2xl overflow-hidden border bg-white">
-                <img src={proof.payment_proof_url} alt="Bukti bayar" className="w-full h-full object-contain p-2" />
+            {proof.payment_proof_url ? (
+              <div className="space-y-2">
+                <div className="w-full h-56 rounded-2xl overflow-hidden border bg-white">
+                  <img src={proof.payment_proof_url} alt="Bukti bayar" className="w-full h-full object-contain p-2" />
+                </div>
+                <p className="text-[10px] text-text-muted text-center flex items-center justify-center gap-1">
+                  <Clock3 size={11} className="text-primary" />
+                  <span>Bukti transfer akan otomatis hangus 2 hari setelah pesanan diselesaikan.</span>
+                </p>
+              </div>
+            ) : (
+              <div className="w-full py-8 rounded-2xl bg-surface-container-low/70 border border-border-subtle flex flex-col items-center justify-center text-center p-4 gap-2">
+                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <Clock3 size={20} />
+                </div>
+                <p className="text-xs font-bold text-on-surface">Bukti Transfer Telah Hangus</p>
+                <p className="text-[11px] text-text-muted leading-relaxed">
+                  Bukti transfer QRIS pesanan ini telah otomatis dihapus karena telah melewati batas masa simpan 2 hari setelah pesanan diselesaikan pemilik kantin.
+                </p>
               </div>
             )}
             <div className="liquid-glass-soft rounded-xl p-3 space-y-1.5 text-sm">
