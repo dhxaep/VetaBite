@@ -115,7 +115,12 @@ export default function StatusTokoPage() {
         body: fd,
         credentials: "include",
       });
-      const json = await res.json();
+      let json: any = null;
+      try {
+        json = await res.json();
+      } catch {
+        throw new Error(`Gagal memproses berkas (HTTP ${res.status}). Silakan coba gambar dengan ukuran lebih kecil.`);
+      }
       if (!res.ok || json.success === false) {
         throw new Error(json?.error?.message || "Gagal mengunggah file gambar.");
       }

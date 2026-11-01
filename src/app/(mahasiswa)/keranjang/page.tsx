@@ -91,7 +91,12 @@ export default function CartPage() {
         body: fd,
         credentials: "include",
       });
-      const j = await res.json();
+      let j: any = null;
+      try {
+        j = await res.json();
+      } catch {
+        throw new Error(`Gagal memproses bukti bayar (HTTP ${res.status}).`);
+      }
       if (!res.ok || j.success === false) throw new Error(j?.error?.message || "Gagal mengunggah bukti.");
       setProof(j.data.fileUrl);
     } catch (err: unknown) {
