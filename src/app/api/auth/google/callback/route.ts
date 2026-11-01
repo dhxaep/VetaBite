@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createSession, setSession, newSession } from "@/lib/auth";
+import { createSession, setSession, newSession, createSessionToken } from "@/lib/auth";
 import { getGoogleAdmins, addGoogleAdmin, addAdminAuditLog } from "@/lib/admin-data";
 
 interface GoogleUserInfo {
@@ -96,10 +96,14 @@ export async function GET(req: NextRequest) {
           .replace(/\b\w/g, (c) => c.toUpperCase());
 
       // Auto-register or verify admin
-      const allowedAdmins = await getGoogleAdmins();
-      let matchingAdmin = allowedAdmins.find((a) => a.email.toLowerCase() === email);
-      if (!matchingAdmin) {
-        matchingAdmin = await addGoogleAdmin(email, formattedName);
+      try {
+        const allowedAdmins = await getGoogleAdmins();
+        let matchingAdmin = allowedAdmins.find((a) => a.email.toLowerCase() === email);
+        if (!matchingAdmin) {
+          matchingAdmin = await addGoogleAdmin(email, formattedName);
+        }
+      } catch (adminErr) {
+        console.error("Warning syncing google admin list:", adminErr);
       }
 
       // Update or create User in Supabase DB with role ADMIN
@@ -125,10 +129,11 @@ export async function GET(req: NextRequest) {
             status: "ACTIVE",
           },
         });
-      } else if (adminUser.role !== "ADMIN" || !adminUser.google_id) {
+      } else {
         adminUser = await prisma.user.update({
           where: { id: adminUser.id },
           data: {
+            email,
             role: "ADMIN",
             google_id: googleUser.sub,
             avatar_url: googleUser.picture || adminUser.avatar_url,
@@ -137,17 +142,30 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Create session cookie for admin
-      await setSession(newSession(adminUser.id, "ADMIN", "ACTIVE"));
+      try {
+        addAdminAuditLog(
+          "Login Berhasil",
+          "emerald",
+          email,
+          "Otentikasi berhasil via Google OAuth SSO. Akun Administrator terverifikasi."
+        );
+      } catch (logErr) {
+        console.error("Audit log error ignored:", logErr);
+      }
 
-      addAdminAuditLog(
-        "Login Berhasil",
-        "emerald",
-        email,
-        "Otentikasi berhasil via Google OAuth SSO. Akun Administrator terverifikasi."
-      );
-
-      return NextResponse.redirect(new URL("/admin/admins", appUrl));
+      // Set session cookie directly on the redirect response
+      const redirectTarget = new URL("/admin/admins", appUrl);
+      const res = NextResponse.redirect(redirectTarget);
+      const ttlMs = 30 * 24 * 3600 * 1000;
+      const sessionToken = createSessionToken(newSession(adminUser.id, "ADMIN", "ACTIVE", ttlMs));
+      res.cookies.set("vb_session", sessionToken, {
+        httpOnly: true,
+        path: "/",
+        maxAge: ttlMs / 1000,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+      return res;
     }
 
     // === STUDENT FLOW (Domain UPNVJ) ===
@@ -218,14 +236,24 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 5. Create secure session cookie (30 days)
-    await createSession(user.id, true);
-
-    // 6. Redirect to dashboard
-    return NextResponse.redirect(new URL("/dashboard", appUrl));
+    // 5. Create secure session cookie (30 days) and redirect to dashboard
+    const redirectTarget = new URL("/dashboard", appUrl);
+    const res = NextResponse.redirect(redirectTarget);
+    const ttlMs = 30 * 24 * 3600 * 1000;
+    const sessionToken = createSessionToken(newSession(user.id, "MAHASISWA", user.status, ttlMs));
+    res.cookies.set("vb_session", sessionToken, {
+      httpOnly: true,
+      path: "/",
+      maxAge: ttlMs / 1000,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return res;
   } catch (err: unknown) {
     console.error("Google OAuth Callback Handler Error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
     loginUrl.searchParams.set("error", "server_error");
+    loginUrl.searchParams.set("details", encodeURIComponent(msg.slice(0, 100)));
     return NextResponse.redirect(loginUrl);
   }
 }

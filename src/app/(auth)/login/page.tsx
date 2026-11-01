@@ -7,49 +7,13 @@ import {
   Eye,
   EyeOff,
   Check,
-  ArrowRight,
   AlertCircle,
-  X,
   Loader2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
 type AuthMode = "login" | "register";
 type AuthRole = "buyer" | "canteen";
-
-interface DemoAccount {
-  name: string;
-  email: string;
-  nim: string;
-  faculty: string;
-}
-
-const DEFAULT_DEMO_ACCOUNTS: DemoAccount[] = [
-  {
-    name: "Dimas Arya Pratama",
-    email: "2110511001@mahasiswa.upnvj.ac.id",
-    nim: "2110511001",
-    faculty: "Fakultas Ilmu Komputer",
-  },
-  {
-    name: "Gheffira Nurul",
-    email: "2110511045@mahasiswa.upnvj.ac.id",
-    nim: "2110511045",
-    faculty: "Fakultas Ilmu Komputer",
-  },
-  {
-    name: "Salma Putri Anindya",
-    email: "2210611023@mahasiswa.upnvj.ac.id",
-    nim: "2210611023",
-    faculty: "Fakultas Ekonomi dan Bisnis",
-  },
-  {
-    name: "Rizky Fauzan",
-    email: "2010411088@mahasiswa.upnvj.ac.id",
-    nim: "2010411088",
-    faculty: "Fakultas Ilmu Sosial dan Ilmu Politik",
-  },
-];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -58,15 +22,6 @@ export default function LoginPage() {
   const [role, setRole] = useState<AuthRole>("buyer");
   // Mode for canteen: login or register
   const [mode, setMode] = useState<AuthMode>("login");
-
-  // Google Student OAuth States
-  const [googleModalOpen, setGoogleModalOpen] = useState(false);
-  const [customStudentEmail, setCustomStudentEmail] = useState("");
-  const [customStudentName, setCustomStudentName] = useState("");
-  const [studentRememberMe, setStudentRememberMe] = useState(true);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState("");
-  const [oauthConfigured, setOauthConfigured] = useState<boolean | null>(null);
 
   // Canteen Login inputs
   const [identifier, setIdentifier] = useState("");
@@ -99,16 +54,11 @@ export default function LoginPage() {
       // Ignore
     }
 
-    // Check if Google OAuth Client ID & Secret are set
-    fetch("/api/auth/google/config")
-      .then((r) => r.json())
-      .then((d) => setOauthConfigured(Boolean(d.configured)))
-      .catch(() => setOauthConfigured(false));
-
     // Handle OAuth Callback errors from URL query params
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const errParam = params.get("error");
+      const details = params.get("details");
       if (errParam === "invalid_domain") {
         setError("Hanya akun resmi mahasiswa UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) yang dapat masuk.");
       } else if (errParam === "oauth_not_configured") {
@@ -117,6 +67,8 @@ export default function LoginPage() {
         setError("Proses masuk Google dibatalkan oleh pengguna.");
       } else if (errParam === "account_suspended") {
         setError("Akun Anda berstatus non-aktif atau ditangguhkan.");
+      } else if (errParam === "server_error") {
+        setError(details ? `Kesalahan internal: ${decodeURIComponent(details)}` : "Terjadi kesalahan internal pada server autentikasi.");
       } else if (errParam) {
         setError(`Gagal masuk via Google: ${errParam}`);
       }
@@ -124,47 +76,7 @@ export default function LoginPage() {
   }, []);
 
   function handleGooglePrimaryClick() {
-    if (oauthConfigured) {
-      window.location.href = "/api/auth/google/login";
-    } else {
-      setGoogleModalOpen(true);
-    }
-  }
-
-  // Handle Student Google OAuth
-  async function handleStudentGoogleAuth(emailToUse?: string, nameToUse?: string) {
-    const targetEmail = (emailToUse || customStudentEmail).trim().toLowerCase();
-    const targetName = (nameToUse || customStudentName).trim();
-    setGoogleError("");
-
-    if (!targetEmail) {
-      setGoogleError("Email mahasiswa wajib diisi.");
-      return;
-    }
-
-    if (!targetEmail.endsWith("@mahasiswa.upnvj.ac.id") && !targetEmail.endsWith("@upnvj.ac.id")) {
-      setGoogleError("Hanya akun resmi sivitas UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) yang dapat masuk.");
-      return;
-    }
-
-    setGoogleLoading(true);
-    try {
-      const res = await api<{ redirectTo?: string }>("/api/auth/google", {
-        method: "POST",
-        body: JSON.stringify({
-          email: targetEmail,
-          full_name: targetName || undefined,
-          remember_me: studentRememberMe,
-        }),
-      });
-
-      setGoogleModalOpen(false);
-      router.push(res.redirectTo || "/dashboard");
-    } catch (err: unknown) {
-      setGoogleError(err instanceof Error ? err.message : "Gagal masuk via Google Akun Mahasiswa.");
-    } finally {
-      setGoogleLoading(false);
-    }
+    window.location.href = "/api/auth/google/login";
   }
 
   // Handle Canteen Login
@@ -549,43 +461,6 @@ export default function LoginPage() {
                   </button>
                 </div>
 
-                {/* Quick Student Fast-Login Chips */}
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                      AKUN DEMO MAHASISWA CEPAT
-                    </span>
-                    <span className="text-[10px] font-semibold text-primary bg-primary-fixed/50 px-2 py-0.5 rounded-full">
-                      1-Klik Masuk
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {DEFAULT_DEMO_ACCOUNTS.map((acc) => (
-                      <button
-                        key={acc.email}
-                        type="button"
-                        onClick={() => handleStudentGoogleAuth(acc.email, acc.name)}
-                        disabled={googleLoading}
-                        className="w-full p-2.5 rounded-xl bg-white/70 hover:bg-white border border-white/90 text-left flex items-center justify-between transition-all hover:shadow-xs group cursor-pointer disabled:opacity-50"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                            {acc.name.charAt(0)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[12px] font-bold text-on-surface truncate group-hover:text-primary transition-colors">
-                              {acc.name}
-                            </p>
-                            <p className="text-[11px] text-text-muted truncate">
-                              {acc.email}
-                            </p>
-                          </div>
-                        </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-text-muted group-hover:text-primary shrink-0 transition-transform group-hover:translate-x-0.5" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             ) : mode === "login" ? (
               /* Pemilik Kantin Credential Login Flow Container (Snippet 2) */
@@ -1070,80 +945,6 @@ export default function LoginPage() {
           </p>
         </footer>
       </div>
-
-      {/* Developer / Fallback Student OAuth Modal (if Google credentials not loaded or manual simulation needed) */}
-      {googleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-white/90">
-            <button
-              type="button"
-              onClick={() => setGoogleModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:text-on-surface hover:bg-surface-dim transition-all"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 flex items-center justify-center">
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z" />
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.13C3.25 21.31 7.31 24 12 24z" />
-                  <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.58H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.42l4.02-3.13z" />
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.69 1.26 6.58l4.02 3.13c.95-2.83 3.6-4.96 6.72-4.96z" />
-                </svg>
-              </div>
-              <h3 className="font-headline-sm font-bold text-on-surface">Masuk dengan Akun Google</h3>
-            </div>
-
-            <p className="text-xs text-text-muted mb-4 leading-relaxed">
-              Masukkan alamat email mahasiswa resmi UPNVJ Anda untuk masuk otomatis:
-            </p>
-
-            {googleError && (
-              <div className="p-2.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-bold mb-3">
-                {googleError}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">
-                  Nama Mahasiswa (Opsional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Dimas Arya Pratama"
-                  value={customStudentName}
-                  onChange={(e) => setCustomStudentName(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl bg-surface-dim/60 border border-border-specular text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">
-                  Email Mahasiswa Kampus *
-                </label>
-                <input
-                  type="email"
-                  placeholder="2110511001@mahasiswa.upnvj.ac.id"
-                  value={customStudentEmail}
-                  onChange={(e) => setCustomStudentEmail(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl bg-surface-dim/60 border border-border-specular text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleStudentGoogleAuth()}
-                disabled={googleLoading}
-                className="w-full h-11 rounded-full btn-tangy-gradient text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-              >
-                {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lanjutkan Masuk"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

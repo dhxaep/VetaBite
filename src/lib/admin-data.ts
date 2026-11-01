@@ -42,15 +42,20 @@ export interface PasswordResetToken {
   expiresAt: number;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === "production");
+const DATA_DIR = isServerless ? path.join("/tmp", "vetabite_data") : path.join(process.cwd(), "data");
 const ADMINS_FILE = path.join(DATA_DIR, "google_admins.json");
 const AUDIT_FILE = path.join(DATA_DIR, "admin_audit_logs.json");
 const USER_AUDIT_FILE = path.join(DATA_DIR, "user_audit_logs.json");
 const TOKENS_FILE = path.join(DATA_DIR, "reset_tokens.json");
 
 function ensureDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch {
+    // Read-only filesystem in serverless, ignored safely
   }
 }
 
@@ -168,6 +173,11 @@ const DEFAULT_USER_AUDIT_LOGS: UserAuditLog[] = [
   },
 ];
 
+let memoryAdmins: GoogleAdmin[] = [...DEFAULT_ADMINS];
+let memoryAuditLogs: AdminAuditLog[] = [...DEFAULT_AUDIT_LOGS];
+let memoryUserAuditLogs: UserAuditLog[] = [...DEFAULT_USER_AUDIT_LOGS];
+let memoryTokens: Record<string, PasswordResetToken> = {};
+
 export function getInitials(name: string): string {
   if (!name) return "AD";
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -187,13 +197,13 @@ export async function getGoogleAdmins(): Promise<GoogleAdmin[]> {
     const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 
     const list: GoogleAdmin[] = dbAdmins.map((u) => {
-      const isSuper = u.username.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase();
+      const isSuper = (u.email?.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) || (u.username.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase());
       const created = u.created_at || new Date();
       const dateFormatted = `${String(created.getDate()).padStart(2, "0")} ${months[created.getMonth()]} ${created.getFullYear()}`;
 
       return {
         id: u.id,
-        email: u.username,
+        email: u.email || u.username,
         full_name: u.full_name || (isSuper ? "Dhafa Gifari" : "Administrator"),
         role: isSuper ? "Superadmin Utama" : "Administrator",
         initials: getInitials(u.full_name || u.username),
@@ -202,24 +212,40 @@ export async function getGoogleAdmins(): Promise<GoogleAdmin[]> {
       };
     });
 
-    // Ensure Superadmin is in the list
+    // Ensure Superadmin exists in Supabase
     const hasSuper = list.some((a) => a.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase());
     if (!hasSuper) {
       const pwd = await hashPassword("AdminUPNVJ#2025!");
-      const superUser = await prisma.user.upsert({
-        where: { username: SUPERADMIN_EMAIL },
-        update: { role: "ADMIN", status: "ACTIVE" },
-        create: {
-          username: SUPERADMIN_EMAIL,
-          full_name: "Dhafa Gifari",
-          role: "ADMIN",
-          status: "ACTIVE",
-          password_hash: pwd,
+      let superUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { username: SUPERADMIN_EMAIL },
+            { email: SUPERADMIN_EMAIL },
+          ],
         },
       });
+
+      if (superUser) {
+        superUser = await prisma.user.update({
+          where: { id: superUser.id },
+          data: { role: "ADMIN", status: "ACTIVE", email: SUPERADMIN_EMAIL },
+        });
+      } else {
+        superUser = await prisma.user.create({
+          data: {
+            username: SUPERADMIN_EMAIL,
+            email: SUPERADMIN_EMAIL,
+            full_name: "Dhafa Gifari",
+            role: "ADMIN",
+            status: "ACTIVE",
+            password_hash: pwd,
+          },
+        });
+      }
+
       list.unshift({
         id: superUser.id,
-        email: superUser.username,
+        email: superUser.email || superUser.username,
         full_name: superUser.full_name,
         role: "Superadmin Utama",
         initials: "DG",
@@ -235,20 +261,26 @@ export async function getGoogleAdmins(): Promise<GoogleAdmin[]> {
       return 0;
     });
 
+    memoryAdmins = list;
     return list;
   } catch (err) {
     console.error("Failed to query admins from Supabase:", err);
-    return DEFAULT_ADMINS;
+    return memoryAdmins.length > 0 ? memoryAdmins : DEFAULT_ADMINS;
   }
 }
 
 export function saveGoogleAdmins(admins: GoogleAdmin[]) {
-  ensureDir();
-  const normalized = admins.map((a) => ({
-    ...a,
-    role: a.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() ? "Superadmin Utama" : "Administrator",
-  }));
-  fs.writeFileSync(ADMINS_FILE, JSON.stringify(normalized, null, 2));
+  try {
+    ensureDir();
+    const normalized = admins.map((a) => ({
+      ...a,
+      role: a.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() ? "Superadmin Utama" : "Administrator",
+    }));
+    memoryAdmins = normalized;
+    fs.writeFileSync(ADMINS_FILE, JSON.stringify(normalized, null, 2));
+  } catch {
+    // Read-only filesystem in serverless, memoryAdmins handles runtime state
+  }
 }
 
 export async function addGoogleAdmin(email: string, full_name: string): Promise<GoogleAdmin> {
@@ -257,42 +289,65 @@ export async function addGoogleAdmin(email: string, full_name: string): Promise<
   const defaultHash = await hashPassword("AdminUPNVJ#2025!");
 
   // Persist directly to Supabase User table
-  const user = await prisma.user.upsert({
-    where: { username: lowerEmail },
-    update: {
-      full_name: full_name.trim(),
-      role: "ADMIN",
-      status: "ACTIVE",
-    },
-    create: {
-      username: lowerEmail,
-      full_name: full_name.trim(),
-      role: "ADMIN",
-      status: "ACTIVE",
-      password_hash: defaultHash,
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: lowerEmail },
+        { email: lowerEmail },
+      ],
     },
   });
+
+  if (user) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email: lowerEmail,
+        full_name: full_name.trim(),
+        role: "ADMIN",
+        status: "ACTIVE",
+      },
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        email: lowerEmail,
+        username: lowerEmail,
+        full_name: full_name.trim(),
+        role: "ADMIN",
+        status: "ACTIVE",
+        password_hash: defaultHash,
+      },
+    });
+  }
 
   const now = new Date();
   const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
   const dateFormatted = `${String(now.getDate()).padStart(2, "0")} ${months[now.getMonth()]} ${now.getFullYear()}`;
 
-  addAdminAuditLog(
-    "Admin Ditambahkan",
-    "emerald",
-    user.username,
-    `Akun Google ditautkan di database Supabase dengan hak akses ${isSuper ? "Superadmin Utama" : "Administrator"}.`
-  );
+  try {
+    addAdminAuditLog(
+      "Admin Ditambahkan",
+      "emerald",
+      user.username,
+      `Akun Google ditautkan di database Supabase dengan hak akses ${isSuper ? "Superadmin Utama" : "Administrator"}.`
+    );
+  } catch {
+    // Audit log write failure ignored on serverless
+  }
 
-  return {
+  const newAdmin: GoogleAdmin = {
     id: user.id,
-    email: user.username,
+    email: user.email || user.username,
     full_name: user.full_name,
     role: isSuper ? "Superadmin Utama" : "Administrator",
     initials: getInitials(user.full_name),
     status: "active",
     added_at: dateFormatted,
   };
+
+  memoryAdmins = [newAdmin, ...memoryAdmins.filter((a) => a.email.toLowerCase() !== lowerEmail)];
+  return newAdmin;
 }
 
 export interface RemoveAdminResult {
@@ -310,6 +365,7 @@ export async function removeGoogleAdmin(idOrEmail: string): Promise<RemoveAdminR
       OR: [
         { id: idOrEmail },
         { username: lower },
+        { email: lower },
       ],
       role: "ADMIN",
     },
@@ -322,7 +378,10 @@ export async function removeGoogleAdmin(idOrEmail: string): Promise<RemoveAdminR
     };
   }
 
-  if (user.username.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) {
+  if (
+    user.username.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() ||
+    (user.email && user.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase())
+  ) {
     return {
       success: false,
       isSuperadmin: true,
@@ -335,12 +394,18 @@ export async function removeGoogleAdmin(idOrEmail: string): Promise<RemoveAdminR
     where: { id: user.id },
   });
 
-  addAdminAuditLog(
-    "Akses Dicabut",
-    "warning",
-    user.username,
-    `Kewenangan admin Google OAuth telah dicabut dari database Supabase (Kick Admin).`
-  );
+  try {
+    addAdminAuditLog(
+      "Akses Dicabut",
+      "warning",
+      user.username,
+      `Kewenangan admin Google OAuth telah dicabut dari database Supabase (Kick Admin).`
+    );
+  } catch {
+    // Ignore serverless logging error
+  }
+
+  memoryAdmins = memoryAdmins.filter((a) => a.id !== user.id && a.email.toLowerCase() !== lower);
 
   return {
     success: true,
@@ -349,16 +414,22 @@ export async function removeGoogleAdmin(idOrEmail: string): Promise<RemoveAdminR
 }
 
 export function getAdminAuditLogs(): AdminAuditLog[] {
-  ensureDir();
   try {
+    ensureDir();
     if (!fs.existsSync(AUDIT_FILE)) {
-      fs.writeFileSync(AUDIT_FILE, JSON.stringify(DEFAULT_AUDIT_LOGS, null, 2));
-      return DEFAULT_AUDIT_LOGS;
+      try {
+        fs.writeFileSync(AUDIT_FILE, JSON.stringify(DEFAULT_AUDIT_LOGS, null, 2));
+      } catch {
+        // serverless read-only ignored
+      }
+      return memoryAuditLogs;
     }
     const data = fs.readFileSync(AUDIT_FILE, "utf-8");
-    return JSON.parse(data) as AdminAuditLog[];
+    const parsed = JSON.parse(data) as AdminAuditLog[];
+    memoryAuditLogs = parsed;
+    return parsed;
   } catch {
-    return DEFAULT_AUDIT_LOGS;
+    return memoryAuditLogs;
   }
 }
 
@@ -368,33 +439,44 @@ export function addAdminAuditLog(
   email: string,
   description: string
 ) {
-  ensureDir();
-  const logs = getAdminAuditLogs();
-  const now = new Date();
-  const timeStr = `Hari ini, ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} WIB`;
-  logs.unshift({
-    id: `log-${Date.now()}`,
-    timestamp: timeStr,
-    statusBadge,
-    statusBadgeColor,
-    email,
-    description,
-  });
-  if (logs.length > 30) logs.pop();
-  fs.writeFileSync(AUDIT_FILE, JSON.stringify(logs, null, 2));
+  try {
+    ensureDir();
+    const logs = [...getAdminAuditLogs()];
+    const now = new Date();
+    const timeStr = `Hari ini, ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} WIB`;
+    logs.unshift({
+      id: `log-${Date.now()}`,
+      timestamp: timeStr,
+      statusBadge,
+      statusBadgeColor,
+      email,
+      description,
+    });
+    if (logs.length > 30) logs.pop();
+    memoryAuditLogs = logs;
+    fs.writeFileSync(AUDIT_FILE, JSON.stringify(logs, null, 2));
+  } catch {
+    // Ignore serverless fs write error
+  }
 }
 
 export function getUserAuditLogs(): UserAuditLog[] {
-  ensureDir();
   try {
+    ensureDir();
     if (!fs.existsSync(USER_AUDIT_FILE)) {
-      fs.writeFileSync(USER_AUDIT_FILE, JSON.stringify(DEFAULT_USER_AUDIT_LOGS, null, 2));
-      return DEFAULT_USER_AUDIT_LOGS;
+      try {
+        fs.writeFileSync(USER_AUDIT_FILE, JSON.stringify(DEFAULT_USER_AUDIT_LOGS, null, 2));
+      } catch {
+        // serverless read-only ignored
+      }
+      return memoryUserAuditLogs;
     }
     const data = fs.readFileSync(USER_AUDIT_FILE, "utf-8");
-    return JSON.parse(data) as UserAuditLog[];
+    const parsed = JSON.parse(data) as UserAuditLog[];
+    memoryUserAuditLogs = parsed;
+    return parsed;
   } catch {
-    return DEFAULT_USER_AUDIT_LOGS;
+    return memoryUserAuditLogs;
   }
 }
 
@@ -405,34 +487,46 @@ export function addUserAuditLog(
   meta: string,
   type: "banned" | "key" | "verified"
 ) {
-  ensureDir();
-  const logs = getUserAuditLogs();
-  logs.unshift({
-    id: `ual-${Date.now()}`,
-    timestamp: "Baru saja",
-    title,
-    targetUser,
-    detail,
-    meta,
-    type,
-  });
-  if (logs.length > 30) logs.pop();
-  fs.writeFileSync(USER_AUDIT_FILE, JSON.stringify(logs, null, 2));
+  try {
+    ensureDir();
+    const logs = [...getUserAuditLogs()];
+    logs.unshift({
+      id: `ual-${Date.now()}`,
+      timestamp: "Baru saja",
+      title,
+      targetUser,
+      detail,
+      meta,
+      type,
+    });
+    if (logs.length > 30) logs.pop();
+    memoryUserAuditLogs = logs;
+    fs.writeFileSync(USER_AUDIT_FILE, JSON.stringify(logs, null, 2));
+  } catch {
+    // Ignore serverless fs write error
+  }
 }
 
 function getTokens(): Record<string, PasswordResetToken> {
-  ensureDir();
   try {
-    if (!fs.existsSync(TOKENS_FILE)) return {};
-    return JSON.parse(fs.readFileSync(TOKENS_FILE, "utf-8"));
+    ensureDir();
+    if (!fs.existsSync(TOKENS_FILE)) return memoryTokens;
+    const parsed = JSON.parse(fs.readFileSync(TOKENS_FILE, "utf-8"));
+    memoryTokens = parsed;
+    return parsed;
   } catch {
-    return {};
+    return memoryTokens;
   }
 }
 
 function saveTokens(tokens: Record<string, PasswordResetToken>) {
-  ensureDir();
-  fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
+  memoryTokens = tokens;
+  try {
+    ensureDir();
+    fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
+  } catch {
+    // Ignore serverless fs write error
+  }
 }
 
 export function generatePasswordResetToken(
