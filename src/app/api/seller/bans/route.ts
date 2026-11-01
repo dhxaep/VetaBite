@@ -4,12 +4,59 @@ import { prisma } from '@/lib/prisma';
 import { ownerCanteen } from '@/lib/owner';
 import { jsonOk, jsonErr, zodMsg } from '@/lib/api';
 
-export async function GET() {
+export async function GET(req: Request) {
   const s = await getSession();
   if (!s) return jsonErr('UNAUTHORIZED', 'Silakan masuk terlebih dahulu.', 401);
   if (s.role !== 'PENJUAL') return jsonErr('FORBIDDEN', 'Tidak memiliki hak akses.', 403);
   const c = await ownerCanteen(s.uid);
   if (!c) return jsonErr('NOT_FOUND', 'Kantin tidak ditemukan.', 404);
+
+  const { searchParams } = new URL(req.url);
+  const lookupNim = searchParams.get('lookup_nim');
+
+  if (lookupNim) {
+    const cleanNim = lookupNim.trim();
+    const student = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: { equals: cleanNim, mode: 'insensitive' } },
+          { email: { startsWith: cleanNim, mode: 'insensitive' } },
+        ],
+        role: 'MAHASISWA',
+      },
+      select: {
+        id: true,
+        username: true,
+        full_name: true,
+        email: true,
+        avatar_url: true,
+      },
+    });
+
+    if (!student) {
+      return jsonErr('NOT_FOUND', `Mahasiswa dengan NIM "${cleanNim}" tidak ditemukan di database kampus.`, 404);
+    }
+
+    const isAlreadyBanned = await prisma.canteenBan.findUnique({
+      where: {
+        canteen_id_user_id: {
+          canteen_id: c.id,
+          user_id: student.id,
+        },
+      },
+    });
+
+    return jsonOk({
+      student: {
+        id: student.id,
+        nim: student.username,
+        full_name: student.full_name,
+        email: student.email,
+        avatar_url: student.avatar_url,
+        isBanned: Boolean(isAlreadyBanned),
+      },
+    });
+  }
 
   const rawBans = await prisma.canteenBan.findMany({
     where: { canteen_id: c.id },
@@ -46,15 +93,27 @@ export async function POST(req: Request) {
       if (order) targetUserId = order.buyer_id;
     }
 
-    if (!targetUserId && raw.username) {
-      const cleanUser = String(raw.username).replace(/^@/, '').trim();
-      const user = await prisma.user.findFirst({ where: { username: cleanUser } });
-      if (user) targetUserId = user.id;
-      else return jsonErr('NOT_FOUND', `Pengguna @${cleanUser} tidak ditemukan.`, 404);
+    if (!targetUserId && (raw.nim || raw.username)) {
+      const cleanNim = String(raw.nim || raw.username).replace(/^@/, '').trim();
+      const student = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { username: { equals: cleanNim, mode: 'insensitive' } },
+            { email: { startsWith: cleanNim, mode: 'insensitive' } },
+          ],
+          role: 'MAHASISWA',
+        },
+      });
+
+      if (student) {
+        targetUserId = student.id;
+      } else {
+        return jsonErr('NOT_FOUND', `Mahasiswa dengan NIM "${cleanNim}" tidak ditemukan di database. Pastikan NIM sudah benar.`, 404);
+      }
     }
 
     if (!targetUserId) {
-      return jsonErr('VALIDATION_ERROR', 'Informasi pengguna yang akan diblokir tidak valid.', 400);
+      return jsonErr('VALIDATION_ERROR', 'NIM mahasiswa wajib diisi untuk melakukan pemblokiran.', 400);
     }
 
     const ban = await prisma.canteenBan.upsert({
@@ -73,6 +132,9 @@ export async function POST(req: Request) {
       update: {
         reason,
         note: raw.note,
+      },
+      include: {
+        user: { select: { id: true, username: true, full_name: true } },
       },
     });
 

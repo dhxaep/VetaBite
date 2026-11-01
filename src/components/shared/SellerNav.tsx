@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Receipt, Store, BarChart3, UserX } from "lucide-react";
+import { Receipt, Store, BarChart3, UserCog } from "lucide-react";
 
 const NAV = [
   { href: "/seller/pesanan", label: "Pesanan", Icon: Receipt },
   { href: "/seller/status-toko", label: "Status & Menu", Icon: Store },
   { href: "/seller/statistika", label: "Statistika", Icon: BarChart3 },
-  { href: "/seller/banned", label: "Diblokir", Icon: UserX },
+  { href: "/seller/banned", label: "Akun & Blokir", Icon: UserCog },
 ];
 
 export function SellerNav() {
