@@ -26,11 +26,11 @@ export async function POST(req: NextRequest) {
       return jsonErr("EMAIL_REQUIRED", "Email akun Google wajib diisi.", 400);
     }
 
-    // Strict Domain Enforcement: Only @mahasiswa.upnvj.ac.id allowed for Mahasiswa
-    if (!rawEmail.endsWith("@mahasiswa.upnvj.ac.id")) {
+    // Strict Domain Enforcement: Only @mahasiswa.upnvj.ac.id or @upnvj.ac.id allowed for Mahasiswa
+    if (!rawEmail.endsWith("@mahasiswa.upnvj.ac.id") && !rawEmail.endsWith("@upnvj.ac.id")) {
       return jsonErr(
         "INVALID_DOMAIN",
-        "Hanya akun Google resmi mahasiswa UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id) yang dapat masuk sebagai Mahasiswa.",
+        "Hanya akun Google resmi sivitas UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id atau @upnvj.ac.id) yang dapat masuk sebagai Mahasiswa.",
         400
       );
     }

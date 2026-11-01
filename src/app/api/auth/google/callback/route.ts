@@ -77,8 +77,8 @@ export async function GET(req: NextRequest) {
     const googleUser: GoogleUserInfo = await userRes.json();
     const email = googleUser.email?.trim().toLowerCase() || "";
 
-    // 3. Domain Check: Must be @mahasiswa.upnvj.ac.id
-    if (!email.endsWith("@mahasiswa.upnvj.ac.id")) {
+    // 3. Domain Check: Must be @mahasiswa.upnvj.ac.id or @upnvj.ac.id
+    if (!email.endsWith("@mahasiswa.upnvj.ac.id") && !email.endsWith("@upnvj.ac.id")) {
       loginUrl.searchParams.set("error", "invalid_domain");
       return NextResponse.redirect(loginUrl);
     }

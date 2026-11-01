@@ -16,14 +16,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Google OAuth 2.0 Authorization Endpoint with hosted domain restriction
+  // Google OAuth 2.0 Authorization Endpoint for Campus Students & Civitas
   const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   googleAuthUrl.searchParams.set("client_id", clientId);
   googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
   googleAuthUrl.searchParams.set("response_type", "code");
   googleAuthUrl.searchParams.set("scope", "openid email profile");
-  // hd = Hosted Domain: restricts Google account selection to @mahasiswa.upnvj.ac.id
-  googleAuthUrl.searchParams.set("hd", "mahasiswa.upnvj.ac.id");
   googleAuthUrl.searchParams.set("prompt", "select_account");
   googleAuthUrl.searchParams.set("access_type", "online");
 

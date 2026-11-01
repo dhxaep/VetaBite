@@ -156,8 +156,8 @@ export default function LoginPage() {
       return;
     }
 
-    if (!targetEmail.endsWith("@mahasiswa.upnvj.ac.id")) {
-      setGoogleError("Hanya akun resmi mahasiswa UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id) yang dapat masuk.");
+    if (!targetEmail.endsWith("@mahasiswa.upnvj.ac.id") && !targetEmail.endsWith("@upnvj.ac.id")) {
+      setGoogleError("Hanya akun resmi sivitas UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id / @upnvj.ac.id) yang dapat masuk.");
       return;
     }
 
