@@ -41,21 +41,25 @@ export async function GET() {
         select: { id: true, name: true, banner_url: true },
       },
       buyer: {
-        select: { full_name: true, username: true },
+        select: { id: true, full_name: true, username: true, email: true },
       },
     },
   });
 
-  const mapped = os.map((o) => ({
-    ...o,
-    buyer_name: o.buyer?.full_name || o.buyer?.username || 'Mahasiswa',
-    canteen_name: o.canteen?.name,
-    canteen_banner: o.canteen?.banner_url,
-    items: o.order_items.map((it) => ({
-      ...it,
-      photo_url: it.menu_item?.photo_url || o.canteen?.banner_url || null,
-    })),
-  }));
+  const mapped = os.map((o) => {
+    const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
+    return {
+      ...o,
+      buyer_name: o.buyer?.full_name || 'Mahasiswa',
+      buyer_nim: nim,
+      canteen_name: o.canteen?.name,
+      canteen_banner: o.canteen?.banner_url,
+      items: o.order_items.map((it) => ({
+        ...it,
+        photo_url: it.menu_item?.photo_url || o.canteen?.banner_url || null,
+      })),
+    };
+  });
 
   return jsonOk({ orders: mapped });
 }
@@ -137,13 +141,18 @@ export async function POST(req: Request) {
       });
     });
 
-    const buyer = await prisma.user.findUnique({ where: { id: s.uid }, select: { full_name: true } });
+    const buyer = await prisma.user.findUnique({
+      where: { id: s.uid },
+      select: { full_name: true, username: true, email: true },
+    });
+    const buyerNim = buyer?.username || (buyer?.email ? buyer.email.split('@')[0] : '') || '-';
     publishCanteen(b.canteen_id, {
       event: 'new_order',
       data: {
         order_id: o.id,
         queue_number: o.queue_number,
         buyer_name: buyer?.full_name ?? 'Mahasiswa',
+        buyer_nim: buyerNim,
         total_price: o.total_price,
         items_count: o.order_items.length,
         ordered_at: o.ordered_at,

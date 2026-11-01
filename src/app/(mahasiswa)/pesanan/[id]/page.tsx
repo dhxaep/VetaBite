@@ -35,6 +35,7 @@ type OrderData = {
   queue_number?: string;
   queueNumber?: string;
   buyer_name?: string;
+  buyer_nim?: string;
   buyer?: { full_name?: string; username?: string };
   order_status?: string;
   status?: string;
@@ -246,10 +247,15 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                 <User className="w-3.5 h-3.5" />
               </div>
               <div className="text-left">
-                <span className="text-[10px] uppercase font-bold text-text-muted block">Pelanggan</span>
-                <span className="text-xs font-extrabold text-on-surface block truncate max-w-[120px]">
+                <span className="text-[10px] uppercase font-bold text-text-muted block">Pemesan</span>
+                <span className="text-xs font-extrabold text-on-surface block truncate max-w-[140px]">
                   {o.buyer_name || o.buyer?.full_name || o.buyer?.username || "Mahasiswa"}
                 </span>
+                {(o.buyer_nim || o.buyer?.username) && (
+                  <span className="text-[10px] font-mono font-bold text-primary block leading-tight">
+                    NIM: {o.buyer_nim || o.buyer?.username}
+                  </span>
+                )}
               </div>
             </div>
           </div>

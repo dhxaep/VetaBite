@@ -25,6 +25,8 @@ type Order = {
   canteenId?: string;
   canteen_name?: string;
   buyer_name?: string;
+  buyer_nim?: string;
+  buyer?: { full_name?: string; username?: string };
   order_status?: string;
   status?: string;
   queue_number?: string;
@@ -214,7 +216,14 @@ export default function OrderHistoryPage() {
                     {o.canteen_name || o.canteen?.name || "Kantin UPNVJ"}
                   </h3>
                   <p className="font-body-sm text-body-sm text-text-muted flex items-center gap-1.5 flex-wrap">
-                    <span className="font-bold text-on-surface">Pemesan: {o.buyer_name || "Mahasiswa"}</span>
+                    <span className="font-bold text-on-surface">
+                      Pemesan: {o.buyer_name || "Mahasiswa"}
+                      {(o.buyer_nim || o.buyer?.username) && (
+                        <span className="text-[11px] font-mono text-primary font-extrabold ml-1">
+                          ({o.buyer_nim || o.buyer?.username})
+                        </span>
+                      )}
+                    </span>
                     <span>•</span>
                     <Clock3 className="w-3.5 h-3.5" />
                     <span>

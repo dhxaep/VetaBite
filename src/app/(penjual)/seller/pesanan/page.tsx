@@ -38,6 +38,7 @@ type O = {
   id: string;
   queue_number: string;
   buyer_name: string;
+  buyer_nim?: string;
   created_at: string;
   payment_status: string;
   order_status: string;
@@ -372,8 +373,13 @@ export default function PesananPage() {
                           : "Siap Diambil"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm font-bold">{o.buyer_name}</span>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="text-sm font-extrabold text-on-surface">{o.buyer_name}</span>
+                      {o.buyer_nim && (
+                        <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-surface-container-high/80 text-primary border border-border-specular">
+                          NIM: {o.buyer_nim}
+                        </span>
+                      )}
                       <span className="text-xs text-text-muted">
                         • Jam{" "}
                         {new Date(o.created_at).toLocaleTimeString("id-ID", {
@@ -596,9 +602,12 @@ export default function PesananPage() {
                 <span className="text-text-muted">Nominal:</span>
                 <span className="font-bold text-primary">{formatRupiah(proof.total_price)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">Pembeli:</span>
-                <span className="font-semibold">{proof.buyer_name}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-text-muted">Mahasiswa:</span>
+                <span className="font-semibold text-right">
+                  {proof.buyer_name}
+                  {proof.buyer_nim ? ` (${proof.buyer_nim})` : ""}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Antrean:</span>
@@ -627,7 +636,7 @@ export default function PesananPage() {
             <div className="text-center space-y-1">
               <h3 className="font-bold">Blokir Mahasiswa?</h3>
               <p className="text-sm text-text-muted">
-                Anda akan memblokir <b className="text-on-surface">{blockT.buyer_name}</b> ({blockT.queue_number}). Akun
+                Anda akan memblokir <b className="text-on-surface">{blockT.buyer_name}</b> {blockT.buyer_nim ? `(NIM: ${blockT.buyer_nim})` : ""} dari antrean {blockT.queue_number}. Akun
                 ini tidak dapat memesan di loket Anda sementara waktu.
               </p>
             </div>

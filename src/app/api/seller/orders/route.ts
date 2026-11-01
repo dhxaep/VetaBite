@@ -19,21 +19,25 @@ export async function GET(req: Request) {
     orderBy: { ordered_at: 'desc' },
     include: {
       order_items: true,
-      buyer: { select: { full_name: true, username: true } },
+      buyer: { select: { id: true, full_name: true, username: true, email: true } },
     },
   });
 
-  const mapped = os.map((o) => ({
-    ...o,
-    buyer_name: o.buyer?.full_name || o.buyer?.username || 'Mahasiswa',
-    created_at: o.ordered_at ? o.ordered_at.toISOString() : o.created_at.toISOString(),
-    items: o.order_items.map((it) => ({
-      name: it.name_snapshot,
-      qty: it.qty,
-      note: it.note || '',
-      price: it.price_snapshot,
-    })),
-  }));
+  const mapped = os.map((o) => {
+    const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
+    return {
+      ...o,
+      buyer_name: o.buyer?.full_name || 'Mahasiswa',
+      buyer_nim: nim,
+      created_at: o.ordered_at ? o.ordered_at.toISOString() : o.created_at.toISOString(),
+      items: o.order_items.map((it) => ({
+        name: it.name_snapshot,
+        qty: it.qty,
+        note: it.note || '',
+        price: it.price_snapshot,
+      })),
+    };
+  });
 
   return jsonOk({ orders: mapped, canteen_id: c.id });
 }
