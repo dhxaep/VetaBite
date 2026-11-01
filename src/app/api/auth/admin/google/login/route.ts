@@ -7,7 +7,8 @@ export async function GET(req: NextRequest) {
     ? `${req.nextUrl.protocol}//${req.nextUrl.host}`
     : (process.env.NEXT_PUBLIC_APP_URL || `${req.nextUrl.protocol}//${req.nextUrl.host}`);
 
-  const redirectUri = `${appUrl}/api/auth/admin/google/callback`;
+  // Use unified callback URI matching Google Cloud Console configuration
+  const redirectUri = `${appUrl}/api/auth/google/callback`;
 
   if (!clientId) {
     const loginUrl = new URL("/admin/login", req.url);
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
   googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
   googleAuthUrl.searchParams.set("response_type", "code");
   googleAuthUrl.searchParams.set("scope", "openid email profile");
+  googleAuthUrl.searchParams.set("state", "admin");
   // NO hd parameter: Allows any domain (@gmail.com, @upnvj.ac.id, custom, etc.)
   googleAuthUrl.searchParams.set("prompt", "select_account");
   googleAuthUrl.searchParams.set("access_type", "online");

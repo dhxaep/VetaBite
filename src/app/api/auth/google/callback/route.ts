@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createSession } from "@/lib/auth";
+import { createSession, setSession, newSession } from "@/lib/auth";
+import { getGoogleAdmins, addGoogleAdmin, addAdminAuditLog } from "@/lib/admin-data";
 
 interface GoogleUserInfo {
   sub: string;
@@ -17,6 +18,9 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
+  const state = url.searchParams.get("state");
+
+  const isAdminFlow = state === "admin";
 
   const isLocalhost = url.host.includes("localhost") || url.host.includes("127.0.0.1");
   const appUrl = isLocalhost
@@ -24,7 +28,7 @@ export async function GET(req: NextRequest) {
     : (process.env.NEXT_PUBLIC_APP_URL || `${url.protocol}//${url.host}`);
 
   const redirectUri = `${appUrl}/api/auth/google/callback`;
-  const loginUrl = new URL("/login", appUrl);
+  const loginUrl = new URL(isAdminFlow ? "/admin/login" : "/login", appUrl);
 
   if (error || !code) {
     loginUrl.searchParams.set("error", error || "access_denied");
@@ -77,6 +81,76 @@ export async function GET(req: NextRequest) {
     const googleUser: GoogleUserInfo = await userRes.json();
     const email = googleUser.email?.trim().toLowerCase() || "";
 
+    // === ADMIN FLOW (Domain Bebas) ===
+    if (isAdminFlow) {
+      if (!email) {
+        loginUrl.searchParams.set("error", "email_not_provided");
+        return NextResponse.redirect(loginUrl);
+      }
+
+      const formattedName =
+        googleUser.name?.trim() ||
+        email
+          .split("@")[0]
+          .replace(/[._-]/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      // Auto-register or verify admin
+      const allowedAdmins = await getGoogleAdmins();
+      let matchingAdmin = allowedAdmins.find((a) => a.email.toLowerCase() === email);
+      if (!matchingAdmin) {
+        matchingAdmin = await addGoogleAdmin(email, formattedName);
+      }
+
+      // Update or create User in Supabase DB with role ADMIN
+      let adminUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email },
+            { username: email },
+            { google_id: googleUser.sub },
+          ],
+        },
+      });
+
+      if (!adminUser) {
+        adminUser = await prisma.user.create({
+          data: {
+            email,
+            username: email,
+            full_name: formattedName,
+            google_id: googleUser.sub,
+            avatar_url: googleUser.picture || null,
+            role: "ADMIN",
+            status: "ACTIVE",
+          },
+        });
+      } else if (adminUser.role !== "ADMIN" || !adminUser.google_id) {
+        adminUser = await prisma.user.update({
+          where: { id: adminUser.id },
+          data: {
+            role: "ADMIN",
+            google_id: googleUser.sub,
+            avatar_url: googleUser.picture || adminUser.avatar_url,
+            status: "ACTIVE",
+          },
+        });
+      }
+
+      // Create session cookie for admin
+      await setSession(newSession(adminUser.id, "ADMIN", "ACTIVE"));
+
+      addAdminAuditLog(
+        "Login Berhasil",
+        "emerald",
+        email,
+        "Otentikasi berhasil via Google OAuth SSO. Akun Administrator terverifikasi."
+      );
+
+      return NextResponse.redirect(new URL("/admin/admins", appUrl));
+    }
+
+    // === STUDENT FLOW (Domain UPNVJ) ===
     // 3. Domain Check: Must be @mahasiswa.upnvj.ac.id or @upnvj.ac.id
     if (!email.endsWith("@mahasiswa.upnvj.ac.id") && !email.endsWith("@upnvj.ac.id")) {
       loginUrl.searchParams.set("error", "invalid_domain");
