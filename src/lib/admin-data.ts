@@ -585,16 +585,41 @@ export async function consumePasswordResetToken(
 
   const hash = await hashPassword(newPassword);
   try {
-    let target = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { id: info.userId },
-          { username: info.userId },
-          { full_name: info.userName },
-          { whatsapp: info.phone },
-        ],
-      },
-    });
+    let target = null;
+
+    // 1. Prioritaskan pencarian tepat berdasarkan ID user unik (UUID)
+    if (info.userId) {
+      target = await prisma.user.findUnique({
+        where: { id: info.userId },
+      });
+      if (!target) {
+        target = await prisma.user.findUnique({
+          where: { username: info.userId },
+        });
+      }
+    }
+
+    // 2. Jika tidak ditemukan via ID, cari berdasarkan username atau nama lengkap
+    if (!target && info.userName) {
+      target = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { username: info.userName },
+            { full_name: info.userName },
+          ],
+        },
+      });
+    }
+
+    // 3. Jika masih belum ditemukan dan ada nomor WhatsApp, cari khusus role PENJUAL
+    if (!target && info.phone) {
+      target = await prisma.user.findFirst({
+        where: {
+          whatsapp: info.phone,
+          role: "PENJUAL",
+        },
+      });
+    }
 
     if (target) {
       if (target.role === "MAHASISWA") {
@@ -617,7 +642,7 @@ export async function consumePasswordResetToken(
           username: generatedUsername,
           full_name: info.userName,
           password_hash: hash,
-          role: info.userRole.toLowerCase().includes("kantin") ? "PENJUAL" : "MAHASISWA",
+          role: info.userRole.toLowerCase().includes("kantin") || info.userRole === "PENJUAL" ? "PENJUAL" : "MAHASISWA",
           status: "ACTIVE",
           whatsapp: info.phone,
         },
@@ -625,6 +650,7 @@ export async function consumePasswordResetToken(
     }
   } catch (dbErr) {
     console.error("Database user password update error:", dbErr);
+    return { success: false, message: "Gagal memperbarui kata sandi di database." };
   }
 
   delete tokens[token];
