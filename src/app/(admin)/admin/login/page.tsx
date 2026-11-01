@@ -273,6 +273,26 @@ export default function AdminLoginPage() {
               VetaBite:
             </p>
 
+            {/* Direct Real Google OAuth Launch Button */}
+            <div className="p-3 rounded-2xl bg-primary-fixed/20 border border-primary/25 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-on-surface">Masuk via accounts.google.com</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-primary text-white font-bold">
+                  OAuth Asli (Bebas Domain)
+                </span>
+              </div>
+              <p className="text-[11px] text-text-muted leading-tight">
+                Buka langsung halaman login resmi Google dengan akun Google apapun (@gmail.com, kampus, dll).
+              </p>
+              <a
+                href="/api/auth/admin/google/login"
+                className="w-full py-2.5 px-4 rounded-xl btn-tangy-gradient text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all text-center"
+              >
+                <span>Buka Akun Google Resmi (Direct SSO)</span>
+                <ChevronRight size={14} />
+              </a>
+            </div>
+
             <div className="space-y-2 max-h-52 overflow-y-auto">
               {availableAdmins.map((adm) => (
                 <button
