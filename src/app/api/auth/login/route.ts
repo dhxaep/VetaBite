@@ -9,13 +9,24 @@ const S=z.object({
 });
 export async function POST(req:Request){
  try{ const b=S.parse(await req.json());
+  const rawInput = b.username.trim();
+  const cleanPhone = rawInput.replace(/[^0-9]/g, "");
+
   const u = await prisma.user.findFirst({
     where: {
       OR: [
-        { username: b.username },
-        { email: b.username }
-      ]
-    }
+        { username: { equals: rawInput, mode: "insensitive" } },
+        { email: { equals: rawInput, mode: "insensitive" } },
+        { full_name: { equals: rawInput, mode: "insensitive" } },
+        ...(cleanPhone.length >= 8
+          ? [
+              { whatsapp: rawInput },
+              { whatsapp: cleanPhone },
+              { whatsapp: { contains: cleanPhone.slice(-8) } },
+            ]
+          : []),
+      ],
+    },
   });
   if (!u) return jsonErr('UNAUTHORIZED', 'Username atau kata sandi salah.', 401);
   if (!u.password_hash) {
