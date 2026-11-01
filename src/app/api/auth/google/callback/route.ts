@@ -18,10 +18,10 @@ export async function GET(req: NextRequest) {
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.APP_URL ||
-    `${url.protocol}//${url.host}`;
+  const isLocalhost = url.host.includes("localhost") || url.host.includes("127.0.0.1");
+  const appUrl = isLocalhost
+    ? `${url.protocol}//${url.host}`
+    : (process.env.NEXT_PUBLIC_APP_URL || `${url.protocol}//${url.host}`);
 
   const redirectUri = `${appUrl}/api/auth/google/callback`;
   const loginUrl = new URL("/login", appUrl);

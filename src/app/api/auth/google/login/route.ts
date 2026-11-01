@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.APP_URL ||
-    `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+  const isLocalhost = req.nextUrl.host.includes("localhost") || req.nextUrl.host.includes("127.0.0.1");
+  const appUrl = isLocalhost
+    ? `${req.nextUrl.protocol}//${req.nextUrl.host}`
+    : (process.env.NEXT_PUBLIC_APP_URL || `${req.nextUrl.protocol}//${req.nextUrl.host}`);
 
   const redirectUri = `${appUrl}/api/auth/google/callback`;
 
