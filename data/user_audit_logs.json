@@ -1,0 +1,65 @@
+[
+  {
+    "id": "ual-1793537774927",
+    "timestamp": "Baru saja",
+    "title": "Tautan Reset Password Dibuat",
+    "targetUser": "Ibu Rini Suminar (+62 813-8822-4419)",
+    "detail": "Tautan reset dibuat untuk dispatch via WhatsApp (+6281388224419).",
+    "meta": "Token aktif 15 mnt • Oleh Administrator",
+    "type": "key"
+  },
+  {
+    "id": "ual-1793536536338",
+    "timestamp": "Baru saja",
+    "title": "Kata Sandi Berhasil Diperbarui",
+    "targetUser": "Dimas Arya Pratama",
+    "detail": "Pengguna berhasil memperbarui kata sandi menggunakan tautan reset resmi.",
+    "meta": "Otomatis Sistem",
+    "type": "verified"
+  },
+  {
+    "id": "ual-1793536499219",
+    "timestamp": "Baru saja",
+    "title": "Tautan Reset Password Dibuat",
+    "targetUser": "Dimas Arya Pratama (+62 812-9844-1102)",
+    "detail": "Tautan reset dibuat untuk dispatch via WhatsApp (+6281298441102).",
+    "meta": "Token aktif 15 mnt • Oleh Administrator",
+    "type": "key"
+  },
+  {
+    "id": "ual-1793535968674",
+    "timestamp": "Baru saja",
+    "title": "Tautan Reset Password Dibuat",
+    "targetUser": "Dimas Arya Pratama (+62 812-9844-1102)",
+    "detail": "Tautan reset dibuat untuk dispatch via WhatsApp (+6281298441102).",
+    "meta": "Token aktif 15 mnt • Oleh Administrator",
+    "type": "key"
+  },
+  {
+    "id": "ual-1",
+    "timestamp": "10 menit yang lalu",
+    "title": "Status diubah: Ditangguhkan (Banned)",
+    "targetUser": "Kevin Pratama (NIM 2210512033)",
+    "detail": "Alasan: Pesanan fiktif berulang di Kantin Boulevard.",
+    "meta": "Oleh Admin Kemahasiswaan",
+    "type": "banned"
+  },
+  {
+    "id": "ual-2",
+    "timestamp": "42 menit yang lalu",
+    "title": "Tautan Reset Password Dikirim",
+    "targetUser": "Ibu Rini Suminar (Loket #04)",
+    "detail": "Dispatched via WhatsApp API (+62 813-8822-4419).",
+    "meta": "Token aktif 15 mnt",
+    "type": "key"
+  },
+  {
+    "id": "ual-3",
+    "timestamp": "2 jam yang lalu",
+    "title": "Verifikasi Akun Baru Berhasil",
+    "targetUser": "Dimas Arya Pratama",
+    "detail": "Sinkronisasi data SSO SIAD UPN Veteran Jakarta.",
+    "meta": "Otomatis Sistem",
+    "type": "verified"
+  }
+]

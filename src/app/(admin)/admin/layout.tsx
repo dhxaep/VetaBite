@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ShieldCheck,
   BarChart3,
   MessageSquareWarning,
+  UserCog,
+  Shield,
+  Contrast,
   Store,
   Settings,
   LogOut,
   Download,
   HelpCircle,
   Bell,
-  Contrast,
   ChevronRight,
-  Sparkles,
+  Search,
 } from "lucide-react";
 
 const NAV = [
@@ -22,7 +24,7 @@ const NAV = [
     href: "/admin/verifikasi",
     label: "Verifikasi Kantin",
     Icon: ShieldCheck,
-    badge: "Mitra Baru",
+    badge: "8 Baru",
   },
   {
     href: "/admin/stats",
@@ -33,11 +35,37 @@ const NAV = [
     href: "/admin/komplain",
     label: "Komplain User",
     Icon: MessageSquareWarning,
+    badge: "5",
+  },
+  {
+    href: "/admin/users",
+    label: "Kelola User",
+    Icon: UserCog,
+  },
+  {
+    href: "/admin/admins",
+    label: "Kelola Admin",
+    Icon: Shield,
   },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // fallback
+    }
+    router.push("/admin/login");
+  };
+
+  // /admin/login renders standalone without sidebar/appbar
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
 
   const getPageInfo = () => {
     if (pathname.includes("/admin/verifikasi")) {
@@ -56,6 +84,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return {
         section: "Pusat Resolusi Layanan",
         title: "Resolusi Komplain & Tiket Pengguna",
+      };
+    }
+    if (pathname.includes("/admin/admins")) {
+      return {
+        section: "Akses & Hak Istimewa",
+        title: "Kelola Administrator & Hak Akses Akun Google",
+      };
+    }
+    if (pathname.includes("/admin/users")) {
+      return {
+        section: "Admin Console",
+        title: "Kelola User & Akun Civitas",
       };
     }
     return {
@@ -83,9 +123,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div>
               <div className="flex items-center gap-3.5 px-2 pb-6 border-b border-border-subtle">
                 <div className="w-12 h-12 rounded-2xl p-1 bg-white/90 shadow-md flex items-center justify-center border border-border-specular overflow-hidden shrink-0">
-                  <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white font-black text-xl shadow-inner">
-                    VB
-                  </span>
+                  <img
+                    src="/LOGO.jpeg"
+                    alt="Logo VetaBite"
+                    className="w-10 h-10 rounded-xl object-cover"
+                  />
                 </div>
                 <div>
                   <h1 className="text-xl font-extrabold text-primary tracking-tight">
@@ -137,6 +179,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex flex-col gap-3 pt-4 border-t border-border-subtle">
               {/* Quick Actions */}
               <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => alert("Sistem berjalan dalam mode Liquid Glass Terang optimal.")}
+                  className="flex items-center justify-between px-3 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container text-xs font-semibold transition-all text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <Contrast size={16} />
+                    <span>Mode Tampilan</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-surface-container text-primary font-bold">
+                    Terang
+                  </span>
+                </button>
                 <Link
                   href="/admin/verifikasi"
                   className="flex items-center gap-3 px-3 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container text-xs font-semibold transition-colors"
@@ -144,25 +199,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Settings size={16} />
                   <span>Pengaturan Sistem</span>
                 </Link>
-                <Link
-                  href="/login"
-                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-secondary hover:bg-error-container/40 text-xs font-semibold transition-colors"
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-secondary hover:bg-error-container/40 text-xs font-semibold transition-colors w-full text-left"
                 >
                   <LogOut size={16} />
                   <span>Keluar</span>
-                </Link>
+                </button>
               </div>
 
               {/* Admin Profile Pill */}
               <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-surface-container-low border border-border-specular">
-                <div className="w-9 h-9 rounded-full ring-2 ring-primary/20 bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                  ADM
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-on-primary font-bold text-xs shadow-inner shrink-0">
+                  AU
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-on-surface truncate">Admin Kantin UPNVJ</p>
-                  <p className="text-[10px] text-text-muted truncate">admin.kantin@upnvj.ac.id</p>
+                  <p className="text-xs font-bold text-on-surface truncate">Admin Utama UPNVJ</p>
+                  <p className="text-[10px] text-text-muted truncate">admin.kemahasiswaan@upnvj.ac.id</p>
                 </div>
-                <span className="w-2.5 h-2.5 rounded-full bg-success ring-4 ring-white shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-success ring-4 ring-white shrink-0" title="Google SSO Terhubung" />
               </div>
             </div>
           </div>
@@ -186,19 +242,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Right Action Cluster */}
             <div className="flex items-center gap-3">
-              {/* Server Status Badge */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-border-specular shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-success animate-ping" />
-                <span className="text-xs text-on-surface font-semibold">
-                  Server UPNVJ Siaga 100%
-                </span>
-              </div>
-
               {/* Secondary Help Action */}
               <button
                 type="button"
                 onClick={() => alert("Pusat Bantuan Admin UPN Veteran Jakarta aktif 24/7.")}
-                className="px-4 py-2 rounded-full bg-white/80 hover:bg-surface-container text-on-surface text-xs font-bold border border-border-specular shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-3.5 py-2 rounded-full bg-white/80 hover:bg-surface-container text-on-surface text-xs font-bold border border-border-specular shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
               >
                 <HelpCircle size={15} />
                 <span>Bantuan</span>
@@ -207,23 +255,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {/* Primary Report Download Action */}
               <button
                 type="button"
-                onClick={() => alert("Mengunduh rekapitulasi laporan transaksi admin...")}
+                onClick={() => alert("Mengunduh rekapitulasi audit laporan sistem admin UPNVJ...")}
                 className="btn-liquid-terracotta px-4 py-2 rounded-full text-white text-xs font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md"
               >
                 <Download size={15} />
                 <span>Unduh Laporan</span>
               </button>
 
-              {/* Action Icons */}
-              <div className="flex items-center gap-1.5 pl-2 border-l border-border-subtle">
-                <button
-                  type="button"
-                  aria-label="Notifikasi"
-                  className="w-9 h-9 rounded-full bg-white/70 hover:bg-white flex items-center justify-center text-on-surface transition-colors shadow-sm relative active:scale-95 border border-border-specular"
-                >
-                  <Bell size={17} />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary ring-2 ring-white" />
-                </button>
+              {/* Action Notifications */}
+              <button
+                type="button"
+                aria-label="Notifikasi"
+                className="relative w-9 h-9 rounded-full bg-white/70 hover:bg-white flex items-center justify-center text-on-surface transition-colors shadow-sm active:scale-95 border border-border-specular"
+              >
+                <Bell size={17} />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary ring-2 ring-white" />
+              </button>
+
+              <div className="h-6 w-px bg-border-subtle mx-1" />
+
+              {/* User Google Profile Pill */}
+              <div className="flex items-center gap-3 pl-1">
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs font-bold text-on-surface leading-tight">Biro Kemahasiswaan</p>
+                  <span className="text-[10px] text-success font-semibold flex items-center justify-end gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Google SSO Terkoneksi
+                  </span>
+                </div>
+                <div className="w-9 h-9 rounded-full border-2 border-border-specular p-0.5 bg-white/90 overflow-hidden shadow-sm flex items-center justify-center">
+                  <div className="w-full h-full rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center text-on-primary text-[10px] font-extrabold">
+                    UPN
+                  </div>
+                </div>
               </div>
             </div>
           </header>

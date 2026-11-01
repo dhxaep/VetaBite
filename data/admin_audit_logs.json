@@ -1,0 +1,58 @@
+[
+  {
+    "id": "log-1793537644513",
+    "timestamp": "Hari ini, 19:54 WIB",
+    "statusBadge": "Akses Dicabut",
+    "statusBadgeColor": "warning",
+    "email": "dhafa.developer@perusahaan.co.id",
+    "description": "Kewenangan admin Google OAuth telah dicabut (Kick Admin)."
+  },
+  {
+    "id": "log-1793537114488",
+    "timestamp": "Hari ini, 19:45 WIB",
+    "statusBadge": "Login Berhasil",
+    "statusBadgeColor": "emerald",
+    "email": "dhafa.developer@perusahaan.co.id",
+    "description": "Otentikasi berhasil via Google OAuth SSO. IP: 103.111.201.14 (Kampus Pondok Labu)."
+  },
+  {
+    "id": "log-1793537112145",
+    "timestamp": "Hari ini, 19:45 WIB",
+    "statusBadge": "Admin Ditambahkan",
+    "statusBadgeColor": "emerald",
+    "email": "dhafa.developer@perusahaan.co.id",
+    "description": "Akun Google ditautkan dengan hak akses tunggal Administrator."
+  },
+  {
+    "id": "log-1793536291908",
+    "timestamp": "Hari ini, 19:31 WIB",
+    "statusBadge": "Admin Ditambahkan",
+    "statusBadgeColor": "emerald",
+    "email": "agus.kemahasiswaan@gmail.com",
+    "description": "Akun Google ditautkan dengan hak akses tunggal Administrator."
+  },
+  {
+    "id": "log-1",
+    "timestamp": "Hari ini, 09:42 WIB",
+    "statusBadge": "Login Berhasil",
+    "statusBadgeColor": "emerald",
+    "email": "hendra.wicaksono@gmail.com",
+    "description": "Otentikasi berhasil via Google OAuth SSO. IP: 103.111.201.14 (Jakarta Selatan)."
+  },
+  {
+    "id": "log-2",
+    "timestamp": "Kemarin, 14:15 WIB",
+    "statusBadge": "Admin Ditambahkan",
+    "statusBadgeColor": "primary",
+    "email": "bagas.prasetyo@company.com",
+    "description": "Penambahan akun baru dengan hak akses tunggal Administrator."
+  },
+  {
+    "id": "log-3",
+    "timestamp": "02 Nov 2024, 11:04 WIB",
+    "statusBadge": "Admin Ditambahkan",
+    "statusBadgeColor": "emerald",
+    "email": "dewi.anggraini@yahoo.com",
+    "description": "Akun Google institusi/publik ditautkan langsung dengan peran Administrator."
+  }
+]

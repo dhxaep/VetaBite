@@ -48,12 +48,14 @@ export async function PATCH(req: Request) {
     if (b.theme !== undefined) updateData.theme = b.theme;
 
     if (b.new_password) {
-      if (!b.old_password) {
-        return jsonErr('VALIDATION_ERROR', 'Kata sandi lama wajib diisi.', 400);
-      }
-      const match = await verifyPassword(b.old_password, u.password_hash);
-      if (!match) {
-        return jsonErr('VALIDATION_ERROR', 'Kata sandi lama tidak sesuai.', 400);
+      if (u.password_hash) {
+        if (!b.old_password) {
+          return jsonErr('VALIDATION_ERROR', 'Kata sandi lama wajib diisi.', 400);
+        }
+        const match = await verifyPassword(b.old_password, u.password_hash);
+        if (!match) {
+          return jsonErr('VALIDATION_ERROR', 'Kata sandi lama tidak sesuai.', 400);
+        }
       }
       updateData.password_hash = await hashPassword(b.new_password);
     }

@@ -1,0 +1,65 @@
+[
+  {
+    "id": "adm-superadmin",
+    "email": "dhafagifari0412@gmail.com",
+    "full_name": "Dhafa Gifari",
+    "role": "Superadmin Utama",
+    "initials": "DG",
+    "status": "active",
+    "added_at": "01 Jan 2024"
+  },
+  {
+    "id": "adm-1793536291904",
+    "email": "agus.kemahasiswaan@gmail.com",
+    "full_name": "Agus Setiawan, M.Sc.",
+    "role": "Administrator",
+    "initials": "AM",
+    "status": "active",
+    "added_at": "01 Nov 2026"
+  },
+  {
+    "id": "adm-1",
+    "email": "hendra.wicaksono@gmail.com",
+    "full_name": "Dr. Ir. Hendra Wicaksono, M.T.",
+    "role": "Administrator",
+    "initials": "HW",
+    "status": "active",
+    "added_at": "01 Agu 2024"
+  },
+  {
+    "id": "adm-2",
+    "email": "dewi.anggraini@yahoo.com",
+    "full_name": "Dewi Anggraini, S.Kom.",
+    "role": "Administrator",
+    "initials": "DA",
+    "status": "active",
+    "added_at": "15 Sep 2024"
+  },
+  {
+    "id": "adm-3",
+    "email": "bagas.prasetyo@company.com",
+    "full_name": "Bagas Prasetyo, S.AP.",
+    "role": "Administrator",
+    "initials": "BP",
+    "status": "active",
+    "added_at": "10 Okt 2024"
+  },
+  {
+    "id": "adm-4",
+    "email": "nurul.hidayah@upnvj.ac.id",
+    "full_name": "Nurul Hidayah, S.E.",
+    "role": "Administrator",
+    "initials": "NH",
+    "status": "active",
+    "added_at": "02 Nov 2024"
+  },
+  {
+    "id": "adm-5",
+    "email": "admin.kemahasiswaan@upnvj.ac.id",
+    "full_name": "Admin Utama UPNVJ",
+    "role": "Administrator",
+    "initials": "AU",
+    "status": "active",
+    "added_at": "01 Jul 2024"
+  }
+]

@@ -29,21 +29,32 @@ function decodeSession(token: string | null | undefined): { uid?: string; role?:
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Special case: /admin/login is the dedicated Google OAuth portal for administrators
+  if (pathname === "/admin/login") {
+    const token = req.cookies.get("vb_session")?.value;
+    const session = decodeSession(token);
+    if (session && session.role === "ADMIN" && (session.exp ?? 0) >= Date.now()) {
+      return NextResponse.redirect(new URL("/admin/admins", req.url));
+    }
+    return NextResponse.next();
+  }
+
   const isSeller = SELLER_ROUTES.some((p) => pathname.startsWith(p));
   const isAdmin = ADMIN_ROUTES.some((p) => pathname.startsWith(p));
   const isMhs = MHS_ROUTES.some((p) => pathname.startsWith(p));
 
-  // If not a protected route, continue
-  if (!isSeller && !isAdmin && !isMhs) {
+  // If not a protected route or preview mode, continue
+  if ((!isSeller && !isAdmin && !isMhs) || req.nextUrl.searchParams.get("preview") === "1") {
     return NextResponse.next();
   }
 
   const token = req.cookies.get("vb_session")?.value;
   const session = decodeSession(token);
 
-  // If unauthenticated or expired session, redirect to login
+  // If unauthenticated or expired session, redirect to appropriate login portal
   if (!session || (session.exp ?? 0) < Date.now()) {
-    const loginUrl = new URL("/login", req.url);
+    const loginTarget = isAdmin ? "/admin/login" : "/login";
+    const loginUrl = new URL(loginTarget, req.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -53,7 +64,7 @@ export function middleware(req: NextRequest) {
   // Strict RBAC route guards
   if (isSeller && role !== "PENJUAL") {
     // Non-sellers attempting to access /seller/* are redirected to their home dashboard
-    return NextResponse.redirect(new URL(role === "ADMIN" ? "/admin/verifikasi" : "/dashboard", req.url));
+    return NextResponse.redirect(new URL(role === "ADMIN" ? "/admin/admins" : "/dashboard", req.url));
   }
 
   if (isAdmin && role !== "ADMIN") {

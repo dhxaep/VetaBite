@@ -29,7 +29,7 @@ export default function Welcome() {
               <img
                 alt="Maskot VetaBite Kantin UPN Veteran Jakarta"
                 className="w-full h-full object-contain rounded-full drop-shadow-md select-none pointer-events-none"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGzjb_suzmk6ln-f-y8WYuLuL7NGVrqoftngFnK2OcqjJi3xWRNifEmr91o3ast0TK8MOTyDkH3YderqzVD-sXoc-Ob2z2N7l7WmP4M0AU2Ky_pwMadnJD2RHmCQKELKHbgX9yV7EkZp0gUrozoRZ9b3j0sIUwB7y9dmYl59auEAyUfph5pd-5Vz346sWJx9TylBhwRaUrJlYZsiAbydeAr5uQd42cQwjnDRWeU0bDYZR6VE5PaJmWwQ"
+                src="/LOGO.jpeg"
               />
             </div>
             <div className="absolute -bottom-2 status-pill px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">

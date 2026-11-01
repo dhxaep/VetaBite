@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Heart, Clock, Plus, History, SlidersHorizontal, Flame, ShoppingBag, ArrowRight } from "lucide-react";
+import { Search, Heart, Clock, Plus, History, SlidersHorizontal, ShoppingBag, ArrowRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { loadCart, cartCount, cartTotal } from "@/lib/cart";
 import { formatRupiah } from "@/lib/rupiah";
@@ -54,8 +54,12 @@ export default function Dash() {
       <header className="sticky top-0 z-40 -mx-space-lg px-space-lg pt-3 pb-2.5 bg-surface-glass-alt backdrop-blur-xl border-b border-border-specular shadow-sm">
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <div className="w-8 h-8 rounded-full cta-gradient flex items-center justify-center text-white shadow-sm">
-              <Flame className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full cta-gradient flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
+              <img
+                src="/LOGO.jpeg"
+                alt="Logo VetaBite"
+                className="w-full h-full object-cover rounded-full select-none"
+              />
             </div>
             <span className="font-headline-md text-headline-md font-extrabold text-primary tracking-tight">VetaBite</span>
           </div>

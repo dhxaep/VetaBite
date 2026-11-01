@@ -5,12 +5,19 @@ import { Providers } from "@/components/shared/Providers";
 export const metadata: Metadata = {
   title: "VetaBite - Portal Kantin UPN Veteran Jakarta",
   description: "Platform Pemesanan & Antrean Cerdas Kantin UPNVJ Tanpa Antre",
+  icons: {
+    icon: "/LOGO.jpeg",
+    shortcut: "/LOGO.jpeg",
+    apple: "/LOGO.jpeg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/LOGO.jpeg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/LOGO.jpeg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

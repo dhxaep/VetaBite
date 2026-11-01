@@ -1,0 +1,18 @@
+{
+  "vtb_sec_f7b0475c147010a9": {
+    "token": "vtb_sec_f7b0475c147010a9",
+    "userId": "usr-dimas-arya",
+    "userName": "Dimas Arya Pratama",
+    "userRole": "Mahasiswa (NIM 2110711048)",
+    "phone": "+62 812-9844-1102",
+    "expiresAt": 1793536868663
+  },
+  "vtb_sec_3d1a24a0ac629deb": {
+    "token": "vtb_sec_3d1a24a0ac629deb",
+    "userId": "usr-bu-rini",
+    "userName": "Ibu Rini Suminar",
+    "userRole": "Ibu Kantin (ID LKT-FIK-04)",
+    "phone": "+62 813-8822-4419",
+    "expiresAt": 1793538674926
+  }
+}
