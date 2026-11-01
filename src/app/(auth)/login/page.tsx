@@ -77,6 +77,7 @@ export default function LoginPage() {
   const [studentRememberMe, setStudentRememberMe] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState("");
+  const [oauthConfigured, setOauthConfigured] = useState<boolean | null>(null);
 
   // Canteen Login inputs
   const [identifier, setIdentifier] = useState("");
@@ -98,7 +99,7 @@ export default function LoginPage() {
 
   const isBuyer = role === "buyer";
 
-  // Restore saved identifier from localStorage on mount
+  // Check OAuth config and restore saved identifier from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem("vb_remember_user");
@@ -109,7 +110,40 @@ export default function LoginPage() {
     } catch {
       // Ignore if localStorage unavailable
     }
+
+    // Check if Google OAuth Client ID & Secret are set
+    fetch("/api/auth/google/config")
+      .then((r) => r.json())
+      .then((d) => setOauthConfigured(Boolean(d.configured)))
+      .catch(() => setOauthConfigured(false));
+
+    // Handle OAuth Callback errors from URL query params
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const errParam = params.get("error");
+      if (errParam === "invalid_domain") {
+        setError("Hanya akun resmi mahasiswa UPN Veteran Jakarta (@mahasiswa.upnvj.ac.id) yang dapat masuk.");
+      } else if (errParam === "oauth_not_configured") {
+        setError("Kunci Google OAuth (GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET) belum diatur di file .env.");
+      } else if (errParam === "access_denied") {
+        setError("Proses masuk Google dibatalkan oleh pengguna.");
+      } else if (errParam === "account_suspended") {
+        setError("Akun Anda berstatus non-aktif atau ditangguhkan.");
+      } else if (errParam) {
+        setError(`Gagal masuk via Google: ${errParam}`);
+      }
+    }
   }, []);
+
+  function handleGooglePrimaryClick() {
+    if (oauthConfigured) {
+      // Directly launch real official Google OAuth SSO page
+      window.location.href = "/api/auth/google/login";
+    } else {
+      // Show interactive modal with dev test accounts & instructions
+      setGoogleModalOpen(true);
+    }
+  }
 
   // Handle Student Google OAuth (Auto Login / Auto Register)
   async function handleStudentGoogleAuth(emailToUse?: string, nameToUse?: string) {
@@ -414,8 +448,8 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Error Message Box for Canteen */}
-            {!isBuyer && error && (
+            {/* Error Message Box (from OAuth callback or canteen form) */}
+            {error && (
               <div className="p-2.5 rounded-xl bg-danger/10 border border-danger/30 flex items-center gap-2 text-danger text-xs font-bold">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
@@ -443,7 +477,7 @@ export default function LoginPage() {
                 {/* Primary Google OAuth Button */}
                 <button
                   type="button"
-                  onClick={() => setGoogleModalOpen(true)}
+                  onClick={handleGooglePrimaryClick}
                   className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-white/90 border-2 border-primary/30 shadow-md hover:shadow-lg flex items-center justify-center gap-3 transition-all active:scale-[0.98] group cursor-pointer"
                 >
                   {/* Google SVG G Icon */}
@@ -1001,6 +1035,32 @@ export default function LoginPage() {
                   <span>{googleError}</span>
                 </div>
               )}
+
+              {/* Real Google OAuth Redirect Info Box */}
+              <div className="p-3 rounded-2xl bg-surface-container/60 border border-border-specular flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-on-surface">OAuth Asli Google</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      oauthConfigured ? "bg-emerald-100 text-success" : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {oauthConfigured ? "Terkonfigurasi Aktif" : "Menunggu Kunci .env"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted leading-tight">
+                  {oauthConfigured
+                    ? "Kunci Google OAuth terhubung. Anda dapat langsung membuka akun resmi Google."
+                    : "Untuk mengalihkan langsung ke accounts.google.com resmi, pasang GOOGLE_CLIENT_ID di .env."}
+                </p>
+                <a
+                  href="/api/auth/google/login"
+                  className="w-full py-2 px-3 rounded-xl bg-white border border-border-specular hover:border-primary text-xs font-bold text-center text-on-surface hover:text-primary transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Buka Halaman Resmi accounts.google.com</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
 
               {/* Account list */}
               <div className="space-y-1.5">
