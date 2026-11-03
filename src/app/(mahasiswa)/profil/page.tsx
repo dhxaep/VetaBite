@@ -433,25 +433,6 @@ export default function ProfilePage() {
             </button>
           </div>
         </main>
-
-        {/* Floating Help & Layanan Mahasiswa CS Button (without bottom navigation bar) */}
-        <div className="fixed bottom-6 right-4 z-50 flex items-center justify-end pointer-events-auto">
-          <button
-            type="button"
-            aria-label="Bantuan &amp; Layanan Mahasiswa CS"
-            onClick={() => {
-              window.open("https://wa.me/6281298441102?text=Halo%20Admin%20VetaBite%20UPNVJ%2C%20saya%20butuh%20bantuan.", "_blank");
-            }}
-            className="relative w-14 h-14 rounded-full cta-gradient-btn flex items-center justify-center text-white shadow-lg active:scale-95 transition-all duration-150 border-[1.5px] border-white/90 cursor-pointer"
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
-              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-              <path d="M8 21v-1a4 4 0 0 1 4-4h.5" />
-            </svg>
-            <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-success rounded-full ring-2 ring-white shadow-xs" />
-          </button>
-        </div>
       </div>
     </div>
   );
