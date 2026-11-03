@@ -31,6 +31,7 @@ interface SeoData {
   ogImageUrl: string;
   twitterHandle: string;
   canonicalUrl: string;
+  googleSiteVerification?: string;
 }
 
 interface CurrentUser {
@@ -50,6 +51,7 @@ const DEFAULT_SEO: SeoData = {
   ogImageUrl: "/LOGO.jpeg",
   twitterHandle: "@vetabite",
   canonicalUrl: "https://vetabite.my.id",
+  googleSiteVerification: "",
 };
 
 async function compressImage(file: File, maxWidth: number, maxHeight: number, quality = 0.88): Promise<Blob> {
@@ -195,6 +197,7 @@ export default function SeoPanelPage() {
           ogImageUrl: res.ogImageUrl || res.thumbnailUrl || DEFAULT_SEO.ogImageUrl,
           twitterHandle: res.twitterHandle || DEFAULT_SEO.twitterHandle,
           canonicalUrl: res.canonicalUrl || DEFAULT_SEO.canonicalUrl,
+          googleSiteVerification: res.googleSiteVerification || DEFAULT_SEO.googleSiteVerification,
         });
       }
     } catch (err) {
@@ -722,6 +725,33 @@ export default function SeoPanelPage() {
                       className="w-full h-9 px-3 rounded-xl liquid-glass-input text-xs font-mono text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 border border-border-specular"
                     />
                   </div>
+                </div>
+
+                {/* Google Search Console Verification Code */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-bold text-on-surface">
+                      Kode Verifikasi Google Search Console (Opsional)
+                    </label>
+                    <a
+                      href="https://search.google.com/search-console"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-primary hover:underline font-bold inline-flex items-center gap-1"
+                    >
+                      Buka Google Search Console
+                    </a>
+                  </div>
+                  <input
+                    type="text"
+                    value={seoData.googleSiteVerification || ""}
+                    onChange={(e) => handleFieldChange("googleSiteVerification", e.target.value)}
+                    placeholder="Contoh: google-site-verification=abc123xyz atau kode hash HTML tag..."
+                    className="w-full h-9 px-3 rounded-xl liquid-glass-input text-xs font-mono text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 border border-border-specular"
+                  />
+                  <p className="text-[10px] text-text-muted mt-1">
+                    Digunakan untuk memverifikasi kepemilikan website di Google Search Console agar pengindeksan Googlebot dapat langsung diminta (*Request Indexing*).
+                  </p>
                 </div>
               </div>
             </div>

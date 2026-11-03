@@ -15,6 +15,7 @@ const SEOSchema = z.object({
   ogImageUrl: z.string().optional().default("/LOGO.jpeg"),
   twitterHandle: z.string().max(50).optional().default("@vetabite"),
   canonicalUrl: z.string().optional().default("https://vetabite.my.id"),
+  googleSiteVerification: z.string().max(200).optional().default(""),
 });
 
 const DEFAULT_SEO = {
@@ -27,6 +28,7 @@ const DEFAULT_SEO = {
   ogImageUrl: "/LOGO.jpeg",
   twitterHandle: "@vetabite",
   canonicalUrl: "https://vetabite.my.id",
+  googleSiteVerification: "",
 };
 
 export async function GET() {

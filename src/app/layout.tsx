@@ -15,6 +15,7 @@ interface SeoSettings {
   ogImageUrl: string;
   twitterHandle: string;
   canonicalUrl: string;
+  googleSiteVerification?: string;
 }
 
 const DEFAULT_SEO: SeoSettings = {
@@ -27,6 +28,7 @@ const DEFAULT_SEO: SeoSettings = {
   ogImageUrl: "/LOGO.jpeg",
   twitterHandle: "@vetabite",
   canonicalUrl: "https://vetabite.my.id",
+  googleSiteVerification: "",
 };
 
 async function getSeoSettings(): Promise<SeoSettings> {
@@ -106,6 +108,7 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: seo.canonicalUrl || "https://vetabite.my.id",
     },
+    verification: seo.googleSiteVerification ? { google: seo.googleSiteVerification } : undefined,
   };
 }
 
