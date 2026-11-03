@@ -257,6 +257,53 @@ export function isAlarmActive(): boolean {
   return isPlaying;
 }
 
+/**
+ * Membunyikan nada lonceng manis (chime) saat pesanan mahasiswa siap diambil
+ */
+export function playChimeSound(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    const gain2 = ctx.createGain();
+
+    osc1.type = "sine";
+    osc2.type = "sine";
+
+    // Nada pertama: 659.25 Hz (E5)
+    osc1.frequency.setValueAtTime(659.25, now);
+    gain1.gain.setValueAtTime(0.5, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    // Nada kedua: 880 Hz (A5)
+    osc2.frequency.setValueAtTime(880, now + 0.2);
+    gain2.gain.setValueAtTime(0.6, now + 0.2);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+
+    osc1.start(now);
+    osc1.stop(now + 0.65);
+    osc2.start(now + 0.2);
+    osc2.stop(now + 1.25);
+
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate([200, 100, 300]);
+      } catch {}
+    }
+  } catch {}
+}
+
 export function onAlarmChange(cb: (active: boolean) => void): () => void {
   alarmListeners.add(cb);
   cb(isPlaying);

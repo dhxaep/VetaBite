@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { SellerNav } from "@/components/shared/SellerNav";
+import { SellerOrderNotificationPopup } from "@/components/shared/SellerOrderNotificationPopup";
 
 export default function SellerLayout({ children }: { children: ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function SellerLayout({ children }: { children: ReactNode }) {
         <div className="absolute top-96 right-0 w-80 h-80 bg-secondary-fixed/30 rounded-full blur-3xl pointer-events-none translate-x-1/3" />
         {children}
         <SellerNav />
+        <SellerOrderNotificationPopup />
       </div>
     </div>
   );

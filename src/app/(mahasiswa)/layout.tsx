@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { BottomDock } from "@/components/shared/BottomDock";
 import { CustomerServiceBubble } from "@/components/shared/CustomerServiceBubble";
+import { StudentReadyNotificationPopup } from "@/components/shared/StudentReadyNotificationPopup";
 
 export default function MhsLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function MhsLayout({ children }: { children: ReactNode }) {
         {children}
         <BottomDock />
         <CustomerServiceBubble />
+        <StudentReadyNotificationPopup />
       </div>
     </div>
   );
