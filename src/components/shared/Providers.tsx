@@ -27,16 +27,22 @@ export const useTheme = () => useContext(ThemeCtx);
 export const useLocale = () => useContext(LocaleCtx);
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [theme] = useState("light");
+  const [theme, setThemeState] = useState("light");
   const [locale, setLocaleState] = useState("id");
 
   useEffect(() => {
-    // Selalu paksa Light Mode
-    document.documentElement.dataset.theme = "light";
-    document.documentElement.classList.remove("dark");
     try {
-      localStorage.setItem("vb-theme", "light");
-      localStorage.setItem("vetabite_theme", "light");
+      const storedTheme =
+        localStorage.getItem("vb-theme") ??
+        localStorage.getItem("vetabite_theme") ??
+        "light";
+      setThemeState(storedTheme);
+      document.documentElement.dataset.theme = storedTheme;
+      if (storedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
 
       const storedLocale =
         localStorage.getItem("vb-locale") ??
@@ -45,6 +51,25 @@ export function Providers({ children }: { children: ReactNode }) {
       setLocaleState(storedLocale);
     } catch {}
   }, []);
+
+  const handleSetTheme = (t: string) => {
+    setThemeState(t);
+    document.documentElement.dataset.theme = t;
+    if (t === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    try {
+      localStorage.setItem("vb-theme", t);
+      localStorage.setItem("vetabite_theme", t);
+    } catch {}
+  };
+
+  const handleToggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    handleSetTheme(next);
+  };
 
   const handleSetLocale = (l: string) => {
     setLocaleState(l);
@@ -55,7 +80,7 @@ export function Providers({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeCtx.Provider value={{ theme: "light", toggle: () => {}, setTheme: () => {} }}>
+    <ThemeCtx.Provider value={{ theme, toggle: handleToggleTheme, setTheme: handleSetTheme }}>
       <LocaleCtx.Provider value={{ locale, setLocale: handleSetLocale }}>
         <div data-locale={locale}>{children}</div>
       </LocaleCtx.Provider>

@@ -34,6 +34,7 @@ export default function LoginPage() {
   const [canteenName, setCanteenName] = useState("");
   const [canteenContact, setCanteenContact] = useState("");
   const [canteenLocation, setCanteenLocation] = useState("kantin-soetomo");
+  const [canteenMenuSpecialty, setCanteenMenuSpecialty] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -154,7 +155,10 @@ export default function LoginPage() {
       "kantin-fisip": "Kantin FISIP (Pondok Labu)",
       "kantin-limo": "Kantin Kampus Limo",
     };
-    const payloadCanteenDesc = locationMap[canteenLocation] || canteenLocation;
+    const locName = locationMap[canteenLocation] || canteenLocation;
+    const payloadCanteenDesc = canteenMenuSpecialty.trim()
+      ? canteenMenuSpecialty.trim()
+      : `Aneka hidangan lezat di ${locName}`;
 
     setLoading(true);
     try {
@@ -645,6 +649,34 @@ export default function LoginPage() {
                       </svg>
                     </span>
                   </div>
+                </div>
+
+                {/* Field 4b: Contoh Menu yang Dijual */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-label-sm font-label-sm text-text-muted tracking-wider uppercase">
+                    MENU YANG DIJUAL (CONTOH MAKANAN)
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-text-muted flex items-center pointer-events-none">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" viewBox="0 0 24 24">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                        <line x1="6" y1="1" x2="6" y2="4" />
+                        <line x1="10" y1="1" x2="10" y2="4" />
+                        <line x1="14" y1="1" x2="14" y2="4" />
+                      </svg>
+                    </span>
+                    <input
+                      className="w-full h-11 pl-10 pr-3.5 rounded-xl bg-white/70 border border-white focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary text-body-md font-body-md text-on-surface shadow-sm placeholder:text-text-muted/60 transition-all outline-none"
+                      placeholder="Contoh: Ayam Geprek, Nasi Padang, Mie Goreng"
+                      type="text"
+                      value={canteenMenuSpecialty}
+                      onChange={(e) => setCanteenMenuSpecialty(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-[10px] text-text-muted">
+                    Sebutkan contoh menu makanan/minuman agar mahasiswa langsung tahu sajian loket Anda.
+                  </p>
                 </div>
 
                 {/* Field 5: Kata Sandi Baru */}

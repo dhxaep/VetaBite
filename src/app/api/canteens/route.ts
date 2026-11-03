@@ -74,15 +74,28 @@ export async function GET(req: Request) {
       return jsonOk(results);
     }
 
-    let out = cs.map((c) => ({
-      id: c.id,
-      name: c.name,
-      description: c.description || 'Kantin resmi kampus UPN Veteran Jakarta.',
-      banner_url: c.banner_url,
-      is_open: c.is_open,
-      queue_prefix: c.queue_prefix,
-      estimated_wait_minutes: c.orders.length * 5 || 5,
-    }));
+    let out = cs.map((c) => {
+      const sample_items =
+        c.menu_items && c.menu_items.length > 0
+          ? c.menu_items.slice(0, 4).map((m) => m.name).join(', ')
+          : null;
+      const min_price =
+        c.menu_items && c.menu_items.length > 0
+          ? Math.min(...c.menu_items.map((m) => m.price))
+          : 10000;
+
+      return {
+        id: c.id,
+        name: c.name,
+        description: c.description || 'Aneka masakan kantin kampus UPN Veteran Jakarta.',
+        sample_items,
+        min_price,
+        banner_url: c.banner_url,
+        is_open: c.is_open,
+        queue_prefix: c.queue_prefix,
+        estimated_wait_minutes: c.orders.length * 5 || 5,
+      };
+    });
 
     if (cat && cat !== 'semua') {
       out = out.filter((c) => {

@@ -8,9 +8,13 @@ import {
   Check,
   AlertCircle,
   Loader2,
+  Phone,
+  Volume2,
+  Smartphone,
+  LogOut,
+  Bell,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { useLocale } from "@/components/shared/Providers";
 
 type UserData = {
   id: string;
@@ -19,8 +23,6 @@ type UserData = {
   full_name?: string;
   whatsapp?: string;
   avatar_url?: string;
-  language?: string;
-  theme?: string;
   role?: string;
   status?: string;
 };
@@ -30,11 +32,14 @@ const DEFAULT_AVATAR =
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { locale, setLocale } = useLocale();
 
   const [me, setMe] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+
+  // WhatsApp form
+  const [whatsappInput, setWhatsappInput] = useState("");
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
 
   // Toggles
   const [soundNotify, setSoundNotify] = useState(true);
@@ -49,8 +54,8 @@ export default function ProfilePage() {
     try {
       const data = await api<UserData>("/api/me");
       setMe(data);
-      if (data.language && data.language !== locale) {
-        setLocale(data.language);
+      if (data.whatsapp) {
+        setWhatsappInput(data.whatsapp);
       }
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -76,20 +81,27 @@ export default function ProfilePage() {
     }, 4000);
   }
 
-  // Ganti Bahasa
-  async function handleSelectLocale(nextLocale: "id" | "en") {
-    setLocale(nextLocale);
+  // Simpan Nomor WhatsApp
+  async function handleSaveWhatsapp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!whatsappInput.trim()) {
+      showMessage("error", "Nomor WhatsApp tidak boleh kosong.");
+      return;
+    }
+    setSavingWhatsapp(true);
     try {
       await api("/api/me", {
         method: "PATCH",
-        body: JSON.stringify({ language: nextLocale }),
+        body: JSON.stringify({ whatsapp: whatsappInput.trim() }),
       });
-      showMessage(
-        "success",
-        nextLocale === "id" ? "Bahasa diubah ke Bahasa Indonesia." : "Language switched to English."
-      );
-    } catch {
-      // Ignore network patch error
+      if (me) {
+        setMe({ ...me, whatsapp: whatsappInput.trim() });
+      }
+      showMessage("success", "Nomor WhatsApp berhasil disimpan.");
+    } catch (e: unknown) {
+      showMessage("error", e instanceof Error ? e.message : "Gagal memperbarui nomor WhatsApp.");
+    } finally {
+      setSavingWhatsapp(false);
     }
   }
 
@@ -98,6 +110,11 @@ export default function ProfilePage() {
     setSoundNotify(val);
     try {
       localStorage.setItem("vb-sound-notify", val ? "1" : "0");
+      if (val && typeof window !== "undefined") {
+        const audio = new Audio("/sounds/pickup-ready.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+      }
     } catch {
       // Ignore
     }
@@ -109,6 +126,9 @@ export default function ProfilePage() {
     setHapticNotify(val);
     try {
       localStorage.setItem("vb-haptic-notify", val ? "1" : "0");
+      if (val && typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([40, 60, 40]);
+      }
     } catch {
       // Ignore
     }
@@ -146,7 +166,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={loadUser}
-            className="px-4 py-2 rounded-full cta-gradient-btn text-white text-xs font-bold shadow-md"
+            className="px-4 py-2 rounded-full cta-gradient-btn text-white text-xs font-bold shadow-md cursor-pointer"
           >
             Coba Lagi
           </button>
@@ -155,9 +175,11 @@ export default function ProfilePage() {
     );
   }
 
-  const studentName = me?.full_name || me?.username || "Yumeko Jabami";
+  const studentName = me?.full_name || me?.username || "Mahasiswa UPNVJ";
   const studentNim = me?.username || "2110511042";
-  const studentEmail = me?.email || (me?.username?.includes("@") ? me.username : `${me?.username || "yumeko"}@mahasiswa.upnvj.ac.id`);
+  const studentEmail =
+    me?.email ||
+    (me?.username?.includes("@") ? me.username : `${me?.username || "mahasiswa"}@mahasiswa.upnvj.ac.id`);
   const avatarSrc = me?.avatar_url || DEFAULT_AVATAR;
 
   return (
@@ -198,10 +220,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => router.back()}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 24 24">
-                <line x1="19" x2="5" y1="12" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
+              <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
               <h1 className="text-headline-md font-headline-md text-on-surface tracking-tight leading-tight">
@@ -213,10 +232,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm border border-border-specular flex items-center justify-center text-primary shadow-xs">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
+            <Settings className="w-5 h-5" />
           </div>
         </header>
 
@@ -224,7 +240,7 @@ export default function ProfilePage() {
           {/* Top Profile Glass Card */}
           <section className="glass-panel rounded-2xl p-4 relative overflow-hidden">
             <div className="flex items-center gap-4">
-              {/* Avatar with Green Badge */}
+              {/* Avatar with Green Verified Badge */}
               <div className="relative shrink-0">
                 <div className="w-20 h-20 rounded-full ring-2 ring-white/90 shadow-md overflow-hidden bg-surface-container-high">
                   <img
@@ -234,9 +250,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-gradient-to-tr from-[#00873E] to-[#1DB954] text-white p-1 rounded-full ring-2 ring-white shadow-sm flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
                 </div>
               </div>
               {/* Name, NIM, Verified Email & SSO Badge */}
@@ -247,7 +261,7 @@ export default function ProfilePage() {
                   </h2>
                 </div>
                 <p className="text-body-sm text-text-muted truncate mt-0.5">
-                  NIM: {studentNim} &bull; S1 Informatika
+                  NIM: {studentNim} &bull; Sivitas Akademika
                 </p>
                 <p className="text-body-sm font-bold text-primary truncate mt-0.5">
                   {studentEmail}
@@ -279,72 +293,60 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          {/* Section 2: Bahasa Antarmuka */}
+          {/* Section 1: Pengaturan Kontak WhatsApp Mahasiswa */}
           <section className="glass-panel rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2 border-b border-border-subtle pb-2.5">
               <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                </svg>
+                <Phone className="w-4 h-4" />
               </div>
               <h3 className="text-headline-sm font-headline-sm text-on-surface font-bold">
-                Bahasa Antarmuka
+                Kontak WhatsApp
               </h3>
             </div>
-            <div className="pt-1">
-              <label className="block text-body-sm text-on-surface font-semibold mb-2">
-                Pilih Bahasa Utama
+            <form onSubmit={handleSaveWhatsapp} className="space-y-2.5 pt-1">
+              <label className="block text-body-sm text-on-surface font-semibold">
+                Nomor WhatsApp Aktif
               </label>
-              <div className="p-1 rounded-full bg-surface-container-high/70 backdrop-blur-sm border border-border-specular grid grid-cols-2 gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleSelectLocale("id")}
-                  className={`py-2 rounded-full text-label-md font-label-md flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    locale === "id"
-                      ? "text-white bg-gradient-to-r from-[#FF8A00] to-[#E03A00] shadow-sm font-bold"
-                      : "text-text-muted hover:text-on-surface"
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                  <span>Bahasa Indonesia (ID)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLocale("en")}
-                  className={`py-2 rounded-full text-label-md font-label-md flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    locale === "en"
-                      ? "text-white bg-gradient-to-r from-[#FF8A00] to-[#E03A00] shadow-sm font-bold"
-                      : "text-text-muted hover:text-on-surface"
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M5 8l6 6" />
-                    <path d="M4 14l6-6 2-3" />
-                    <path d="M2 5h12" />
-                    <path d="M7 2h1" />
-                    <path d="M22 22l-5-10-5 10" />
-                    <path d="M14 18h6" />
-                  </svg>
-                  <span>English (EN)</span>
-                </button>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-text-muted flex items-center pointer-events-none">
+                  <Phone className="w-4 h-4" />
+                </span>
+                <input
+                  type="tel"
+                  placeholder="Contoh: 081234567890"
+                  value={whatsappInput}
+                  onChange={(e) => setWhatsappInput(e.target.value)}
+                  className="w-full h-11 pl-9 pr-3.5 rounded-xl bg-white/70 border border-border-specular text-body-md font-body-md text-on-surface shadow-xs placeholder:text-text-muted focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                />
               </div>
-            </div>
+              <p className="text-[10px] text-text-muted leading-tight">
+                Nomor ini digunakan penjual loket kantin untuk konfirmasi pesanan atau jika menu siap diambil.
+              </p>
+              <button
+                type="submit"
+                disabled={savingWhatsapp}
+                className="w-full py-2.5 rounded-xl cta-gradient text-white text-xs font-bold shadow-sm hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {savingWhatsapp ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Simpan Kontak WhatsApp</span>
+                  </>
+                )}
+              </button>
+            </form>
           </section>
 
-          {/* Section 3: Notifikasi & Suara */}
+          {/* Section 2: Notifikasi & Suara */}
           <section className="glass-panel rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2 border-b border-border-subtle pb-2.5">
               <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
+                <Bell className="w-4 h-4" />
               </div>
               <h3 className="text-headline-sm font-headline-sm text-on-surface font-bold">
                 Notifikasi &amp; Suara
@@ -355,10 +357,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-start gap-2.5 pr-2">
                   <div className="text-on-surface mt-0.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                    </svg>
+                    <Volume2 className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-body-sm font-bold text-on-surface leading-tight">
@@ -372,6 +371,7 @@ export default function ProfilePage() {
                 {/* Switch */}
                 <button
                   type="button"
+                  aria-label="Toggle suara notifikasi"
                   onClick={() => toggleSound(!soundNotify)}
                   className={`w-11 h-6 rounded-full p-0.5 flex items-center transition-all shrink-0 shadow-sm cursor-pointer ${
                     soundNotify
@@ -387,10 +387,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between pt-3">
                 <div className="flex items-start gap-2.5 pr-2">
                   <div className="text-on-surface mt-0.5">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                    </svg>
+                    <Smartphone className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-body-sm font-bold text-on-surface leading-tight">
@@ -404,6 +401,7 @@ export default function ProfilePage() {
                 {/* Switch */}
                 <button
                   type="button"
+                  aria-label="Toggle getar notifikasi"
                   onClick={() => toggleHaptic(!hapticNotify)}
                   className={`w-11 h-6 rounded-full p-0.5 flex items-center transition-all shrink-0 shadow-sm cursor-pointer ${
                     hapticNotify
@@ -421,31 +419,25 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent("vetabite:test-ready-banner"));
+                    showMessage("success", "Banner notifikasi antrean berhasil diuji coba.");
                   }}
                   className="w-full py-2.5 px-3 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/25 text-primary text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
                 >
-                  <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                  </svg>
+                  <Bell className="w-4 h-4 text-primary" />
                   <span>Tes Banner Notifikasi HP Sekarang</span>
                 </button>
               </div>
             </div>
           </section>
 
-          {/* Section 5: Standalone Logout Button */}
+          {/* Section 3: Standalone Logout Button */}
           <div className="pt-1 pb-4">
             <button
               type="button"
               onClick={handleLogout}
               className="w-full py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-red-200/80 hover:bg-white text-secondary font-bold text-body-md flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all cursor-pointer"
             >
-              <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <LogOut className="w-5 h-5 text-secondary" />
               <span>Keluar dari Akun</span>
             </button>
           </div>
