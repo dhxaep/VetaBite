@@ -102,6 +102,15 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           const nextStatus = d.order_status || d.status || p?.order_status;
           if (nextStatus === "SIAP_AMBIL") {
             startAlarm("Pesanan Anda Siap Diambil di Loket!");
+            window.dispatchEvent(
+              new CustomEvent("vetabite:order-ready", {
+                detail: {
+                  order_id: id,
+                  queue_number: d.queue_number || p?.queue_number || "A-001",
+                  canteen_name: d.canteen?.name || p?.canteen?.name || "Kantin UPNVJ",
+                },
+              })
+            );
           } else if (nextStatus === "PICKED_UP" || nextStatus === "SELESAI") {
             stopAlarm();
           }

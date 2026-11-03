@@ -132,6 +132,20 @@ export default function PesananPage() {
         const j = JSON.parse(ev.data);
         startAlarm(`Pesanan Baru Masuk: #${j.queue_number || ""}!`);
         setToast(`Pesanan #${j.queue_number || ""} baru saja masuk ke antrean!`);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("vetabite:new-order", {
+              detail: {
+                order_id: j.order_id || j.id || "",
+                queue_number: j.queue_number || "BARU",
+                buyer_name: j.buyer_name || "Mahasiswa",
+                buyer_nim: j.buyer_nim,
+                total_price: j.total_price,
+                items_count: j.items_count,
+              },
+            })
+          );
+        }
       } catch {
         startAlarm("Pesanan Baru Masuk ke Antrean!");
         setToast("Pesanan baru masuk ke antrean!");
@@ -225,6 +239,9 @@ export default function PesananPage() {
             onClick={async () => {
               await testAlarmSound();
               setToast("Suara alarm aktif & berhasil diuji coba!");
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("vetabite:test-seller-banner"));
+              }
             }}
             className="px-3.5 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shrink-0 shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
           >
