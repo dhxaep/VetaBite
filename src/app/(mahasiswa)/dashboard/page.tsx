@@ -51,32 +51,27 @@ export default function Dash() {
   return (
     <div className="flex flex-col gap-4 px-space-lg">
       {/* 1. STICKY LIQUID GLASS NAVBAR */}
-      <header className="sticky top-0 z-40 -mx-space-lg px-space-lg pt-3 pb-2.5 bg-surface-glass-alt backdrop-blur-xl border-b border-border-specular shadow-sm">
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <div className="w-8 h-8 rounded-full cta-gradient flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
+      <header className="sticky top-0 z-40 -mx-space-lg px-space-lg pt-3 pb-3 bg-surface-glass-alt backdrop-blur-xl border-b border-border-specular shadow-sm sm:rounded-t-[41px]">
+        {/* Baris 1: Brand & Tombol Aksi */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full cta-gradient flex items-center justify-center p-0.5 shadow-sm overflow-hidden flex-shrink-0">
               <img
                 src="/LOGO.jpeg"
                 alt="Logo VetaBite"
                 className="w-full h-full object-cover rounded-full select-none"
               />
             </div>
-            <span className="font-headline-md text-headline-md font-extrabold text-primary tracking-tight">VetaBite</span>
+            <span className="font-headline-md text-headline-md font-extrabold text-primary tracking-tight">
+              VetaBite
+            </span>
           </div>
 
-          <Link
-            href="/search"
-            className="flex-1 flex items-center h-10 px-3 rounded-full liquid-glass-input text-[11px] text-text-muted gap-2 transition-all hover:bg-white/90"
-          >
-            <Search className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Cari makanan, minuman, loket...</span>
-          </Link>
-
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Link
               href="/riwayat"
               aria-label="Riwayat Pesanan"
-              className="relative w-9 h-9 rounded-full liquid-glass-input flex items-center justify-center text-on-surface hover:text-primary active:scale-95 transition-transform"
+              className="relative w-9 h-9 rounded-full liquid-glass-input flex items-center justify-center text-on-surface hover:text-primary active:scale-95 transition-transform shadow-sm"
             >
               <History className="w-4 h-4" />
               {n > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary ring-2 ring-white" />}
@@ -85,11 +80,22 @@ export default function Dash() {
             <Link
               href="/profil"
               aria-label="Profil"
-              className="w-9 h-9 rounded-full ring-2 ring-border-specular overflow-hidden flex items-center justify-center font-extrabold bg-primary-fixed text-primary text-xs shadow-sm"
+              className="w-9 h-9 rounded-full ring-2 ring-border-specular overflow-hidden flex items-center justify-center font-extrabold bg-primary-fixed text-primary text-xs shadow-sm active:scale-95 transition-transform"
             >
               VB
             </Link>
           </div>
+        </div>
+
+        {/* Baris 2: Search Trigger Lebar Penuh (Touch-friendly & tidak terpotong di mobile) */}
+        <div className="mt-2.5">
+          <Link
+            href="/search"
+            className="w-full flex items-center h-10 px-3.5 rounded-full liquid-glass-input text-xs text-text-muted gap-2.5 transition-all hover:bg-white/90 shadow-sm"
+          >
+            <Search className="w-4 h-4 flex-shrink-0 text-text-muted" />
+            <span className="truncate font-medium">Cari makanan, minuman, loket...</span>
+          </Link>
         </div>
       </header>
 
