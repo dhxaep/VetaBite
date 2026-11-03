@@ -39,9 +39,9 @@ export function StudentReadyNotificationPopup() {
     return false;
   }, []);
 
-  const triggerReadyBanner = useCallback((order: ReadyOrderData) => {
+  const triggerReadyBanner = useCallback((order: ReadyOrderData, force = false) => {
     if (!order.order_id || !order.queue_number) return;
-    if (isAcked(order.order_id)) return;
+    if (!force && isAcked(order.order_id)) return;
 
     // Set order data and animate visibility
     setReadyOrder(order);
@@ -82,17 +82,20 @@ export function StudentReadyNotificationPopup() {
     const handleCustomEvent = (e: Event) => {
       const customEvent = e as CustomEvent<ReadyOrderData>;
       if (customEvent.detail) {
-        triggerReadyBanner(customEvent.detail);
+        triggerReadyBanner(customEvent.detail, true);
       }
     };
 
     const handleTestEvent = () => {
       requestNotificationPermission();
-      triggerReadyBanner({
-        order_id: `test-${Date.now()}`,
-        queue_number: "A-001",
-        canteen_name: "Kantin Bu Tri — UPNVJ",
-      });
+      triggerReadyBanner(
+        {
+          order_id: `test-${Date.now()}`,
+          queue_number: "A-001",
+          canteen_name: "Kantin Bu Tri — UPNVJ",
+        },
+        true
+      );
     };
 
     window.addEventListener("vetabite:order-ready", handleCustomEvent);

@@ -23,18 +23,22 @@ export async function requestNotificationPermission(): Promise<boolean> {
 export function showNativeNotification(title: string, options?: NotificationOptions): void {
   if (typeof window === "undefined" || !("Notification" in window)) return;
 
-  // Jika izin belum diminta, minta secara pasif
-  if (Notification.permission === "default") {
-    Notification.requestPermission().then((perm) => {
-      if (perm === "granted") {
-        sendNotification(title, options);
-      }
-    });
-    return;
-  }
-
   if (Notification.permission === "granted") {
-    sendNotification(title, options);
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          reg.showNotification(title, {
+            icon: "/LOGO.jpeg",
+            badge: "/LOGO.jpeg",
+            ...options,
+          });
+        })
+        .catch(() => {
+          sendNotification(title, options);
+        });
+    } else {
+      sendNotification(title, options);
+    }
   }
 }
 

@@ -20,7 +20,8 @@ import {
 import { api } from "@/lib/api";
 import { formatRupiah } from "@/lib/rupiah";
 import { SkeletonList, ErrorState } from "@/components/shared/States";
-import { startAlarm, stopAlarm, onAlarmChange } from "@/lib/alarm";
+import { startAlarm, stopAlarm, onAlarmChange, playChimeSound } from "@/lib/alarm";
+import { showNativeNotification, requestNotificationPermission } from "@/lib/notifications";
 
 type OrderItem = {
   qty: number;
@@ -64,6 +65,13 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
   const [e, setE] = useState("");
   const [ok, setOk] = useState(false);
   const [alarmRinging, setAlarmRinging] = useState(false);
+  const [notifPerm, setNotifPerm] = useState<string>("granted");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPerm(Notification.permission);
+    }
+  }, []);
 
   useEffect(() => {
     return onAlarmChange(setAlarmRinging);
@@ -94,48 +102,88 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
     document.addEventListener("visibilitychange", onVisible);
 
     const es = new EventSource(`/api/sse/order/${id}`);
-    es.onmessage = (ev) => {
+
+    const handleOrderEvent = (ev: MessageEvent) => {
       try {
         const j = JSON.parse(ev.data);
         const d = j.data || j;
-        setO((p) => {
-          const nextStatus = d.order_status || d.status || p?.order_status;
-          if (nextStatus === "SIAP_AMBIL") {
-            startAlarm("Pesanan Anda Siap Diambil di Loket!");
-            window.dispatchEvent(
-              new CustomEvent("vetabite:order-ready", {
-                detail: {
-                  order_id: id,
-                  queue_number: d.queue_number || p?.queue_number || "A-001",
-                  canteen_name: d.canteen?.name || p?.canteen?.name || "Kantin UPNVJ",
-                },
-              })
-            );
-          } else if (nextStatus === "PICKED_UP" || nextStatus === "SELESAI") {
-            stopAlarm();
-          }
-          return p ? { ...p, ...d, order_status: nextStatus } : d;
-        });
-      } catch {}
+        const nextStatus = d.order_status || d.status;
+
+        setO((p) => (p ? { ...p, ...d, order_status: nextStatus || p.order_status } : d));
+
+        if (nextStatus === "SIAP_AMBIL") {
+          startAlarm("Pesanan Anda Siap Diambil di Loket!");
+          try {
+            playChimeSound();
+          } catch {}
+
+          const qNum = d.queue_number || o?.queue_number || "A-001";
+          const cName = d.canteen?.name || o?.canteen?.name || o?.canteen_name || "Kantin UPNVJ";
+
+          showNativeNotification(`VetaBite: Pesanan #${qNum} Siap!`, {
+            body: `Makanan dan minuman Anda di ${cName} sudah siap diambil di loket!`,
+            tag: `ready-${id}`,
+          });
+
+          window.dispatchEvent(
+            new CustomEvent("vetabite:order-ready", {
+              detail: {
+                order_id: id,
+                queue_number: qNum,
+                canteen_name: cName,
+              },
+            })
+          );
+        } else if (nextStatus === "PICKED_UP" || nextStatus === "SELESAI") {
+          stopAlarm();
+        }
+      } catch (err) {
+        console.error("SSE parse error:", err);
+      }
     };
+
+    es.addEventListener("order_update", handleOrderEvent);
+    es.onmessage = handleOrderEvent;
     es.onerror = () => es.close();
 
     return () => {
       clearInterval(reloadTimer);
       window.removeEventListener("focus", onVisible);
       document.removeEventListener("visibilitychange", onVisible);
+      es.removeEventListener("order_update", handleOrderEvent);
       es.close();
       stopAlarm();
     };
-  }, [id]);
+  }, [id, o?.queue_number, o?.canteen?.name, o?.canteen_name]);
 
   useEffect(() => {
     if (o?.order_status === "SIAP_AMBIL" || o?.status === "SIAP_AMBIL") {
       startAlarm("Pesanan Anda Siap Diambil di Loket!");
+      try {
+        playChimeSound();
+      } catch {}
+
+      const qNum = o.queue_number || o.queueNumber || "A-001";
+      const cName = o.canteen_name || o.canteen?.name || "Kantin UPNVJ";
+
+      showNativeNotification(`VetaBite: Pesanan #${qNum} Siap!`, {
+        body: `Makanan dan minuman Anda di ${cName} sudah siap diambil di loket!`,
+        tag: `ready-${id}`,
+      });
+
+      window.dispatchEvent(
+        new CustomEvent("vetabite:order-ready", {
+          detail: {
+            order_id: id,
+            queue_number: qNum,
+            canteen_name: cName,
+          },
+        })
+      );
     } else if (o?.order_status === "PICKED_UP" || o?.order_status === "SELESAI") {
       stopAlarm();
     }
-  }, [o?.order_status, o?.status]);
+  }, [o?.order_status, o?.status, id, o?.queue_number, o?.queueNumber, o?.canteen_name, o?.canteen?.name]);
 
   async function pickup() {
     stopAlarm();
@@ -218,6 +266,38 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
       {/* Main Content */}
       <div className="pt-4 flex flex-col gap-4">
         {e && <ErrorState msg={e} onRetry={load} />}
+
+        {/* Banner Izin Notifikasi Browser Native jika belum diizinkan */}
+        {notifPerm === "default" && (
+          <div className="rounded-2xl p-3.5 bg-gradient-to-r from-primary/15 via-orange-500/10 to-primary/15 border-2 border-primary/40 shadow-sm flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shrink-0 shadow-xs">
+                <BellRing className="w-4 h-4 animate-bounce" />
+              </span>
+              <div className="min-w-0">
+                <h4 className="text-xs font-extrabold text-on-surface">Aktifkan Notifikasi Browser</h4>
+                <p className="text-[10px] text-text-muted leading-tight">
+                  Izinkan browser memunculkan pop up saat pesanan siap diambil
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                const ok = await requestNotificationPermission();
+                setNotifPerm(ok ? "granted" : "denied");
+                if (ok) {
+                  showNativeNotification("VetaBite: Notifikasi Aktif!", {
+                    body: "Anda akan menerima pemberitahuan otomatis saat pesanan siap diambil.",
+                  });
+                }
+              }}
+              className="px-3.5 py-2 rounded-xl cta-gradient text-white text-xs font-extrabold shrink-0 shadow-sm active:scale-95 transition-all cursor-pointer"
+            >
+              Izinkan
+            </button>
+          </div>
+        )}
 
         {/* Hero Queue Number Card */}
         <section className="liquid-glass-accent rounded-[24px] p-5 relative overflow-hidden shadow-lg">
