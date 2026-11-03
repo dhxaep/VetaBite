@@ -2,11 +2,30 @@ import { NextResponse } from "next/server";
 
 // ---- Client fetch helper ----
 export type ApiOk<T> = { success: true; data: T };
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(path, { credentials: "include", headers: { "Content-Type": "application/json" }, ...init });
-  const j = await r.json().catch(() => ({ success: false, error: { message: "Respons tidak valid" } }));
-  if (!r.ok || j.success === false) throw new Error(j?.error?.message || "Terjadi kesalahan. Coba lagi.");
-  return (j.data ?? j) as T;
+  const r = await fetch(path, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+
+  let j: any = null;
+  try {
+    j = await r.json();
+  } catch {
+    const errorMsg = !r.ok
+      ? `Terjadi kesalahan pada server (HTTP ${r.status}). Silakan coba lagi.`
+      : "Respons server tidak dapat diproses.";
+    throw new Error(errorMsg);
+  }
+
+  if (!r.ok || j?.success === false) {
+    const msg = j?.error?.message || `Terjadi kesalahan (HTTP ${r.status}).`;
+    throw new Error(msg);
+  }
+
+  return (j?.data ?? j) as T;
 }
 
 // ---- Server response helpers ----

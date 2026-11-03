@@ -52,6 +52,49 @@ const DEFAULT_SEO: SeoData = {
   canonicalUrl: "https://vetabite.my.id",
 };
 
+async function compressImage(file: File, maxWidth: number, maxHeight: number, quality = 0.88): Promise<Blob> {
+  return new Promise((resolve) => {
+    if (file.type.includes("svg") || file.name.endsWith(".ico") || file.type.includes("icon")) {
+      return resolve(file);
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(file);
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const format = file.type.includes("png") ? "image/png" : "image/jpeg";
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob);
+            else resolve(file);
+          },
+          format,
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function SeoPanelPage() {
   // Auth state
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -190,28 +233,29 @@ export default function SeoPanelPage() {
     else setUploadingThumbnail(true);
 
     try {
+      const compressedBlob = await compressImage(file, isFavicon ? 192 : 1200, isFavicon ? 192 : 630);
       const fd = new FormData();
-      fd.append("file", file);
-      fd.append("kind", isFavicon ? "favicon" : "og-thumbnail");
+      fd.append("file", compressedBlob, file.name);
+      fd.append("kind", isFavicon ? "favicon" : "thumbnail");
 
       const res = await fetch("/api/uploads/seo", {
         method: "POST",
         body: fd,
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.data?.fileUrl) {
-        throw new Error(json.error?.message || "Gagal mengunggah file gambar.");
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.data?.fileUrl) {
+        throw new Error(json?.error?.message || `Gagal mengunggah gambar (HTTP ${res.status}).`);
       }
 
       const uploadedUrl = json.data.fileUrl;
       if (isFavicon) {
         handleFieldChange("faviconUrl", uploadedUrl);
-        showFeedback("Favicon berhasil diunggah dan diperbarui.", "success");
+        showFeedback("Favicon berhasil diunggah dan disimpan.", "success");
       } else {
         handleFieldChange("thumbnailUrl", uploadedUrl);
         handleFieldChange("ogImageUrl", uploadedUrl);
-        showFeedback("Meta Thumbnail berhasil diunggah dan diperbarui.", "success");
+        showFeedback("Meta Thumbnail berhasil diunggah dan disimpan.", "success");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Terjadi kesalahan saat upload gambar.";

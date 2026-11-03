@@ -52,44 +52,63 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const s = await getSession();
-  if (!s || s.role !== "ADMIN") {
-    return jsonErr("FORBIDDEN", "Hanya administrator terverifikasi yang dapat mengubah pengaturan SEO.", 403);
-  }
-
   try {
+    const s = await getSession();
+    if (!s || s.role !== "ADMIN") {
+      return jsonErr("FORBIDDEN", "Hanya administrator terverifikasi yang dapat mengubah pengaturan SEO.", 403);
+    }
+
     const raw = await req.json();
     const parsed = SEOSchema.parse(raw);
 
-    const existing = await prisma.siteConfig.findFirst({
-      where: { key: "seo" },
-    });
-
-    if (existing) {
-      await prisma.siteConfig.update({
-        where: { id: existing.id },
-        data: {
-          value: JSON.stringify(parsed),
-          updatedAt: new Date(),
-        },
+    // Jika user mengirimkan data URI base64, simpan langsung ke aset SiteConfig terpisah
+    if (parsed.faviconUrl && parsed.faviconUrl.startsWith("data:")) {
+      await prisma.siteConfig.upsert({
+        where: { key: "asset_favicon" },
+        update: { value: parsed.faviconUrl, updatedAt: new Date() },
+        create: { key: "asset_favicon", value: parsed.faviconUrl, description: "Aset Favicon SEO" },
       });
-    } else {
-      await prisma.siteConfig.create({
-        data: {
-          key: "seo",
-          value: JSON.stringify(parsed),
-          description: "Pengaturan SEO, Favicon, dan OpenGraph VetaBite",
-        },
-      });
+      parsed.faviconUrl = `/api/uploads/seo?asset=favicon&v=${Date.now()}`;
     }
 
-    return jsonOk({ success: true, message: "Pengaturan SEO dan Favicon berhasil disimpan.", data: parsed });
+    if (parsed.thumbnailUrl && parsed.thumbnailUrl.startsWith("data:")) {
+      await prisma.siteConfig.upsert({
+        where: { key: "asset_thumbnail" },
+        update: { value: parsed.thumbnailUrl, updatedAt: new Date() },
+        create: { key: "asset_thumbnail", value: parsed.thumbnailUrl, description: "Aset Thumbnail OG SEO" },
+      });
+      parsed.thumbnailUrl = `/api/uploads/seo?asset=thumbnail&v=${Date.now()}`;
+      parsed.ogImageUrl = parsed.thumbnailUrl;
+    }
+
+    if (parsed.ogImageUrl && parsed.ogImageUrl.startsWith("data:")) {
+      parsed.ogImageUrl = parsed.thumbnailUrl;
+    }
+
+    // Upsert konfigurasi SEO ke SiteConfig
+    await prisma.siteConfig.upsert({
+      where: { key: "seo" },
+      update: {
+        value: JSON.stringify(parsed),
+        updatedAt: new Date(),
+      },
+      create: {
+        key: "seo",
+        value: JSON.stringify(parsed),
+        description: "Pengaturan SEO, Favicon, dan OpenGraph VetaBite",
+      },
+    });
+
+    return jsonOk({
+      success: true,
+      message: "Pengaturan SEO dan Favicon berhasil disimpan.",
+      data: parsed,
+    });
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
       return jsonErr("VALIDATION_ERROR", zodMsg(err), 400);
     }
     console.error("POST /api/admin/settings/seo error:", err);
-    return jsonErr("SERVER_ERROR", "Gagal menyimpan konfigurasi SEO.", 500);
+    return jsonErr("SERVER_ERROR", err instanceof Error ? err.message : "Gagal menyimpan konfigurasi SEO.", 500);
   }
 }
-
