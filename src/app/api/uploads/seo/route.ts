@@ -1,8 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { jsonOk, jsonErr } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
-import { readFile } from "fs/promises";
-import path from "path";
 
 export const dynamic = "force-dynamic";
 
@@ -39,19 +37,8 @@ export async function GET(req: Request) {
       });
     }
 
-    // Fallback: layani logo default dari public/LOGO.jpeg
-    const defaultPath = path.join(process.cwd(), "public", "LOGO.jpeg");
-    const buf = await readFile(defaultPath).catch(() => null);
-    if (buf) {
-      return new Response(buf, {
-        headers: {
-          "Content-Type": "image/jpeg",
-          "Cache-Control": "public, max-age=86400",
-        },
-      });
-    }
-
-    return new Response("Not found", { status: 404 });
+    // Fallback: logo default dari aset statis public/LOGO.jpeg
+    return Response.redirect(new URL("/LOGO.jpeg", req.url), 302);
   } catch (err) {
     console.error("GET /api/uploads/seo error:", err);
     return new Response("Server error", { status: 500 });

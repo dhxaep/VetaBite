@@ -2,9 +2,6 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { jsonOk, jsonErr } from '@/lib/api';
 import { MAX, extFor } from '@/lib/upload';
-import { randomUUID } from 'crypto';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 
 export async function POST(req: Request) {
   try {
@@ -20,18 +17,9 @@ export async function POST(req: Request) {
     const ext = extFor(buf.subarray(0, 16), f.type);
     if (!ext) return jsonErr('VALIDATION_ERROR', 'Format foto harus JPEG, PNG, atau WebP.', 400);
 
-    const name = `avatar-${randomUUID()}.${ext}`;
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-
-    let avatarUrl = `/uploads/${name}`;
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-      await writeFile(path.join(uploadsDir, name), buf);
-    } catch (fsErr) {
-      console.warn("Filesystem read-only, using base64 fallback:", fsErr);
-      const mimeType = f.type || (ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg");
-      avatarUrl = `data:${mimeType};base64,${buf.toString("base64")}`;
-    }
+    // Cloudflare Workers tidak punya disk persisten: simpan sebagai data URI di database
+    const mimeType = f.type || (ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg");
+    const avatarUrl = `data:${mimeType};base64,${buf.toString("base64")}`;
 
     await prisma.user.update({
       where: { id: s.uid },

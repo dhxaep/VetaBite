@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client"; import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client"; import { hashPassword } from "../src/lib/password";
 const prisma = new PrismaClient();
 async function main(){
-  const adminPw = await bcrypt.hash("Admin123!",10);
-  const sellerPw = await bcrypt.hash("Kantin123!",10);
-  const mhsPw = await bcrypt.hash("Mhs12345!",10);
+  const adminPw = await hashPassword("Admin123!");
+  const sellerPw = await hashPassword("Kantin123!");
+  const mhsPw = await hashPassword("Mhs12345!");
   const admin = await prisma.user.upsert({where:{username:"dhafagifari0412@gmail.com"},update:{},create:{username:"dhafagifari0412@gmail.com",password_hash:adminPw,full_name:"Admin VetaBite",role:"ADMIN",status:"ACTIVE"}});
   const seller = await prisma.user.upsert({where:{username:"sandinurfajarpapakajuhaindini@gmail.com"},update:{},create:{username:"sandinurfajarpapakajuhaindini@gmail.com",password_hash:sellerPw,full_name:"Kantin Barokah",role:"PENJUAL",status:"ACTIVE"}});
   const mhs = await prisma.user.upsert({where:{username:"mahasiswa1@mhs.upnvj.ac.id"},update:{},create:{username:"mahasiswa1@mhs.upnvj.ac.id",password_hash:mhsPw,full_name:"Mahasiswa Satu",role:"MAHASISWA",status:"ACTIVE"}});

@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
 
@@ -24,13 +23,7 @@ function sign(p: string) {
 
 export type Session = { uid: string; role: string; status: string; exp: number };
 
-export async function hashPassword(p: string) {
-  return bcrypt.hash(p, 10);
-}
-
-export async function verifyPassword(p: string, h: string) {
-  return bcrypt.compare(p, h);
-}
+export { hashPassword, verifyPassword } from "./password";
 
 export function createSessionToken(s: Session) {
   const p = b64uEncode(JSON.stringify(s));
