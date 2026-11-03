@@ -81,9 +81,10 @@ export default function SeoPanelPage() {
   const checkAdminAuth = async () => {
     try {
       setCheckingAuth(true);
-      const res = await api<{ user: CurrentUser }>("/api/auth/me");
-      if (res?.user && res.user.role === "ADMIN") {
-        setAdminUser(res.user);
+      const res = await api<CurrentUser | { user: CurrentUser }>("/api/auth/me");
+      const user = ("user" in res ? res.user : res) as CurrentUser;
+      if (user && user.role === "ADMIN") {
+        setAdminUser(user);
         await loadSeoSettings();
       } else {
         setAdminUser(null);
@@ -101,7 +102,7 @@ export default function SeoPanelPage() {
     setLoginLoading(true);
 
     try {
-      const res = await api<{ user: CurrentUser }>("/api/auth/login", {
+      const res = await api<CurrentUser | { user: CurrentUser }>("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({
           username: loginUsername.trim(),
@@ -109,12 +110,13 @@ export default function SeoPanelPage() {
         }),
       });
 
-      if (!res?.user || res.user.role !== "ADMIN") {
+      const user = ("user" in res ? res.user : res) as CurrentUser;
+      if (!user || user.role !== "ADMIN") {
         setLoginError("Akses ditolak: Akun ini bukan administrator.");
         return;
       }
 
-      setAdminUser(res.user);
+      setAdminUser(user);
       await loadSeoSettings();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Gagal masuk. Periksa username dan password.";
@@ -279,6 +281,9 @@ export default function SeoPanelPage() {
             <p className="text-xs text-text-muted mt-1">
               Masuk dengan akun Admin untuk mengelola Meta Tag, Favicon, dan Thumbnail VetaBite.
             </p>
+            <div className="mt-2.5 p-2 rounded-xl bg-primary/10 border border-primary/20 text-[11px] text-text-muted">
+              Akun Administrator: <strong className="text-on-surface">dhafagifari0412@gmail.com</strong>
+            </div>
           </div>
 
           {loginError && (
