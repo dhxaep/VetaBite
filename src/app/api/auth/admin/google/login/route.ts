@@ -22,7 +22,9 @@ export async function GET(req: NextRequest) {
   googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
   googleAuthUrl.searchParams.set("response_type", "code");
   googleAuthUrl.searchParams.set("scope", "openid email profile");
-  googleAuthUrl.searchParams.set("state", "admin");
+  const fromSeo = req.nextUrl.searchParams.get("from") === "seo" || req.nextUrl.searchParams.get("returnTo") === "/seo";
+  const state = fromSeo ? "admin_seo" : "admin";
+  googleAuthUrl.searchParams.set("state", state);
   // NO hd parameter: Allows any domain (@gmail.com, @upnvj.ac.id, custom, etc.)
   googleAuthUrl.searchParams.set("prompt", "select_account");
   googleAuthUrl.searchParams.set("access_type", "online");

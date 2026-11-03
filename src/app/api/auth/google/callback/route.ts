@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const error = url.searchParams.get("error");
   const state = url.searchParams.get("state");
 
-  const isAdminFlow = state === "admin";
+  const isAdminFlow = state === "admin" || (typeof state === "string" && state.startsWith("admin"));
 
   const isLocalhost = url.host.includes("localhost") || url.host.includes("127.0.0.1");
   const appUrl = isLocalhost
@@ -154,7 +154,11 @@ export async function GET(req: NextRequest) {
       }
 
       // Set session cookie directly on the redirect response
-      const redirectTarget = new URL("/admin/admins", appUrl);
+      let targetPath = "/admin/admins";
+      if (state && (state.includes("seo") || state.includes("/seo"))) {
+        targetPath = "/seo";
+      }
+      const redirectTarget = new URL(targetPath, appUrl);
       const res = NextResponse.redirect(redirectTarget);
       const ttlMs = 30 * 24 * 3600 * 1000;
       const sessionToken = createSessionToken(newSession(adminUser.id, "ADMIN", "ACTIVE", ttlMs));

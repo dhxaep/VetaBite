@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /api/
+Disallow: /seo
+
+Sitemap: https://vetabite.my.id/sitemap.xml
+
