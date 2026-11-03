@@ -10,7 +10,8 @@
   },
   "observability": { "enabled": true },
   "placement": { "mode": "smart" },
-  "workers_dev": true,
+  "workers_dev": false,
+  "preview_urls": false,
   "routes": [
     { "pattern": "vetabite.my.id", "custom_domain": true },
     { "pattern": "www.vetabite.my.id", "custom_domain": true }
