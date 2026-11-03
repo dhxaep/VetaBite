@@ -51,45 +51,64 @@ export default function Dash() {
   return (
     <div className="flex flex-col gap-4 px-space-lg">
       {/* 1. STICKY LIQUID GLASS NAVBAR */}
-      <header className="sticky top-0 z-40 -mx-space-lg px-space-lg pt-3 pb-2.5 bg-surface-glass-alt backdrop-blur-xl border-b border-border-specular shadow-sm">
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <div className="w-8 h-8 rounded-full cta-gradient flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
+      <header className="sticky top-0 z-50 -mx-space-lg px-space-lg pt-3 pb-2.5 bg-[var(--header-gradient)] backdrop-blur-2xl border-b border-border-specular/60 shadow-lg shadow-primary/10 supports-[backdrop-filter]:bg-primary-container/70">
+        <div className="flex items-center justify-between gap-3">
+          {/* Logo + Title */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="w-9 h-9 rounded-2xl cta-gradient shadow-md ring-2 ring-white/50 flex items-center justify-center p-1 overflow-hidden">
               <img
                 src="/LOGO.jpeg"
                 alt="Logo VetaBite"
-                className="w-full h-full object-cover rounded-full select-none"
+                className="w-full h-full object-cover rounded-xl select-none"
               />
             </div>
-            <span className="font-headline-md text-headline-md font-extrabold text-primary tracking-tight">VetaBite</span>
+            <div className="hidden sm:block">
+              <span className="font-headline-lg text-headline-lg font-extrabold text-primary tracking-tight drop-shadow-sm">VetaBite</span>
+              <span className="ml-2 text-[10px] font-bold text-text-muted bg-white/30 px-1.5 py-0.5 rounded-full">UPNVJ</span>
+            </div>
           </div>
 
+          {/* Search Bar */}
           <Link
             href="/search"
-            className="flex-1 flex items-center h-10 px-3 rounded-full liquid-glass-input text-[11px] text-text-muted gap-2 transition-all hover:bg-white/90"
+            className="flex-1 max-w-lg flex items-center h-11 px-4 rounded-2xl bg-white/90 backdrop-blur-xl border border-primary/20 text-[13px] text-text-muted gap-3 transition-all hover:bg-white hover:shadow-lg hover:scale-[1.01] active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
-            <Search className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Cari makanan, minuman, loket...</span>
+            <Search className="w-4.5 h-4.5 flex-shrink-0 text-primary" />
+            <span className="truncate font-medium">Cari makanan, minuman, loket...</span>
+            <span className="ml-auto hidden md:inline text-[11px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Ctrl+K</span>
           </Link>
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Right Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Link
               href="/riwayat"
               aria-label="Riwayat Pesanan"
-              className="relative w-9 h-9 rounded-full liquid-glass-input flex items-center justify-center text-on-surface hover:text-primary active:scale-95 transition-transform"
+              className="relative w-10 h-10 rounded-xl bg-white/80 backdrop-blur-md flex items-center justify-center text-on-surface hover:text-primary hover:shadow-lg active:scale-95 transition-all border border-white/40"
+              title="Riwayat"
             >
-              <History className="w-4 h-4" />
-              {n > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary ring-2 ring-white" />}
+              <History className="w-4.5 h-4.5" />
+              {n > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-white text-[10px] font-extrabold flex items-center justify-center ring-2 ring-white shadow-md">
+                  {n}
+                </span>
+              )}
             </Link>
 
             <Link
               href="/profil"
               aria-label="Profil"
-              className="w-9 h-9 rounded-full ring-2 ring-border-specular overflow-hidden flex items-center justify-center font-extrabold bg-primary-fixed text-primary text-xs shadow-sm"
+              className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-fixed text-white font-extrabold text-sm shadow-lg flex items-center justify-center ring-2 ring-white/50 hover:shadow-xl active:scale-95 transition-transform"
+              title="Profil"
             >
-              VB
+              VI
             </Link>
           </div>
+        </div>
+
+        {/* Mobile-only title below search */}
+        <div className="sm:hidden mt-2 text-center">
+          <span className="font-headline-md text-headline-md font-extrabold text-primary tracking-tight">VetaBite</span>
+          <span className="ml-2 text-[10px] font-bold text-text-muted bg-white/30 px-1.5 py-0.5 rounded-full">UPNVJ</span>
         </div>
       </header>
 

@@ -1,0 +1,16 @@
+{
+  "name": "vetabite-seo",
+  "short_name": "VetaBite",
+  "description": "Platform Pemesanan & Antrean Cerdas Kantin UPNVJ Tanpa Antre",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#E03A00",
+  "icons": [
+    {
+      "src": "/LOGO.jpeg",
+      "sizes": "any",
+      "type": "image/jpeg"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SELLER_ROUTES = ["/seller"];
-const ADMIN_ROUTES = ["/admin"];
+const ADMIN_ROUTES = ["/admin", "/seo"];
 const MHS_ROUTES = ["/dashboard", "/kantin", "/keranjang", "/pesanan", "/riwayat", "/profil", "/search"];
 
 function decodeSession(token: string | null | undefined): { uid?: string; role?: string; exp?: number } | null {
