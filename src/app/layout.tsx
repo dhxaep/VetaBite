@@ -28,7 +28,7 @@ const DEFAULT_SEO: SeoSettings = {
   ogImageUrl: "/LOGO.jpeg",
   twitterHandle: "@vetabite",
   canonicalUrl: "https://vetabite.my.id",
-  googleSiteVerification: "",
+  googleSiteVerification: "dXyCTujHqvHHCebNQyx1nmNHQ_jucXVnrH9wPuc6Zqs",
 };
 
 async function getSeoSettings(): Promise<SeoSettings> {
@@ -119,6 +119,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
+        <meta
+          name="google-site-verification"
+          content={seo.googleSiteVerification || "dXyCTujHqvHHCebNQyx1nmNHQ_jucXVnrH9wPuc6Zqs"}
+        />
         <link rel="icon" href={favicon} />
         <link rel="apple-touch-icon" href={favicon} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

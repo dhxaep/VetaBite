@@ -28,7 +28,7 @@ const DEFAULT_SEO = {
   ogImageUrl: "/LOGO.jpeg",
   twitterHandle: "@vetabite",
   canonicalUrl: "https://vetabite.my.id",
-  googleSiteVerification: "",
+  googleSiteVerification: "dXyCTujHqvHHCebNQyx1nmNHQ_jucXVnrH9wPuc6Zqs",
 };
 
 export async function GET() {

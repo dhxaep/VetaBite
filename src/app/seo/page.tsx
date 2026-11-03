@@ -51,7 +51,7 @@ const DEFAULT_SEO: SeoData = {
   ogImageUrl: "/LOGO.jpeg",
   twitterHandle: "@vetabite",
   canonicalUrl: "https://vetabite.my.id",
-  googleSiteVerification: "",
+  googleSiteVerification: "dXyCTujHqvHHCebNQyx1nmNHQ_jucXVnrH9wPuc6Zqs",
 };
 
 async function compressImage(file: File, maxWidth: number, maxHeight: number, quality = 0.88): Promise<Blob> {
