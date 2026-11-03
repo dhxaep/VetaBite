@@ -206,7 +206,7 @@ export default function SearchPage() {
                 <div>
                   <div className="flex items-center justify-between gap-1">
                     <span className="font-label-sm text-label-sm text-text-muted truncate">
-                      {c.canteen_id ? `Loket #${c.canteen_id}` : "Kantin UPNVJ"}
+                      Kantin UPNVJ
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
                       Siap Saji

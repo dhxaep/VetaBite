@@ -226,11 +226,6 @@ export default function Dash() {
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       {slide.is_open ? "Buka" : "Tutup"}
                     </span>
-                    {slide.queue_prefix && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20">
-                        Loket #{slide.queue_prefix}
-                      </span>
-                    )}
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-primary/80 backdrop-blur-md border border-white/20">
                       Rekomendasi
                     </span>
@@ -388,11 +383,6 @@ export default function Dash() {
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       {c.is_open ? "Buka" : "Tutup"}
                     </span>
-                    {c.queue_prefix && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/45 backdrop-blur-md text-white border border-white/20">
-                        Loket #{c.queue_prefix}
-                      </span>
-                    )}
                   </div>
                   <button
                     type="button"
