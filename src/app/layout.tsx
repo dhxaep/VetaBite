@@ -31,14 +31,18 @@ const DEFAULT_SEO: SeoSettings = {
   googleSiteVerification: "dXyCTujHqvHHCebNQyx1nmNHQ_jucXVnrH9wPuc6Zqs",
 };
 
+let seoCache: { value: SeoSettings; at: number } | null = null;
+const SEO_CACHE_MS = 5 * 60 * 1000;
+
 async function getSeoSettings(): Promise<SeoSettings> {
+  if (seoCache && Date.now() - seoCache.at < SEO_CACHE_MS) return seoCache.value;
   try {
     const config = await prisma.siteConfig.findFirst({
       where: { key: "seo" },
     });
-    if (config?.value) {
-      return { ...DEFAULT_SEO, ...JSON.parse(config.value) };
-    }
+    const value: SeoSettings = config?.value ? { ...DEFAULT_SEO, ...JSON.parse(config.value) } : DEFAULT_SEO;
+    seoCache = { value, at: Date.now() };
+    return value;
   } catch (err) {
     console.warn("Failed to fetch SEO settings from database, using defaults:", err);
   }

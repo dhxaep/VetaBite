@@ -90,10 +90,10 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     load();
 
-    // Auto reload berkala setiap 4 detik (Auto-sync)
+    // Auto reload berkala setiap 10 detik selama tab terlihat (Auto-sync)
     const reloadTimer = setInterval(() => {
-      load();
-    }, 4000);
+      if (document.visibilityState === "visible") load();
+    }, 10000);
 
     const onVisible = () => {
       if (document.visibilityState === "visible") load();

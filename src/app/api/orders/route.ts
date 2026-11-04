@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { jsonOk, jsonErr, zodMsg } from '@/lib/api';
 import { publishCanteen } from '@/lib/sse';
-import { expireOldPaymentProofs, isPaymentProofExpired } from '@/lib/payment-proof';
+import { expireOldPaymentProofs, isPaymentProofExpired, ordersWithProof, proofUrl } from '@/lib/payment-proof';
 
 const S = z.object({
   canteen_id: z.string().min(1, { message: 'Kantin wajib dipilih.' }),
@@ -16,7 +16,7 @@ const S = z.object({
       })
     )
     .min(1, { message: 'Pilih minimal satu menu.' }),
-  payment_method: z.enum(['QRIS', 'TUNAI']).default('QRIS'),
+  payment_method: z.enum(['QRIS']).default('QRIS'),
   payment_proof_url: z.string().min(1, { message: 'Bukti pembayaran wajib diunggah sebelum pesanan diproses.' }),
 });
 
@@ -30,6 +30,7 @@ export async function GET() {
   const os = await prisma.order.findMany({
     where: { buyer_id: s.uid },
     orderBy: { ordered_at: 'desc' },
+    omit: { payment_proof_url: true },
     include: {
       order_items: {
         include: {
@@ -48,15 +49,16 @@ export async function GET() {
   });
 
   await expireOldPaymentProofs();
+  const withProof = await ordersWithProof(os.map((o) => o.id));
 
   const mapped = os.map((o) => {
     const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
-    const isExpired = isPaymentProofExpired(o) || !o.payment_proof_url;
+    const isExpired = isPaymentProofExpired(o) || !withProof.has(o.id);
     return {
       ...o,
       buyer_name: o.buyer?.full_name || 'Mahasiswa',
       buyer_nim: nim,
-      payment_proof_url: isExpired ? '' : o.payment_proof_url,
+      payment_proof_url: isExpired ? '' : proofUrl(o.id),
       proof_expired: isExpired,
       canteen_name: o.canteen?.name,
       canteen_banner: o.canteen?.banner_url,

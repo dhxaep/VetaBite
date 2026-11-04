@@ -284,7 +284,7 @@ export default function LoginPage() {
                   ? "Pesan kuliner kantin favoritmu tanpa antre. Terbuka untuk seluruh mahasiswa, dosen, staf, hingga pengunjung umum di Kantin FISIP, FIK, FH, dan Gedung Dr. Soetomo."
                   : mode === "login"
                   ? "Portal operasional loket kantin UPNVJ. Kelola pesanan mahasiswa secara real-time, perbarui stok menu harian, dan pantau omzet penjualan."
-                  : "Daftarkan stan loket Anda di ekosistem VetaBite UPNVJ. Layani pesanan mahasiswa tanpa antrean tunai dan kembangkan usaha kuliner kampus."}
+                  : "Daftarkan stan loket Anda di ekosistem VetaBite UPNVJ. Layani pesanan mahasiswa tanpa antrean dan kembangkan usaha kuliner kampus."}
               </p>
             </div>
           </section>

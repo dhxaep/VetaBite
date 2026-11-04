@@ -11,7 +11,6 @@ import {
   Trash2,
   NotebookPen,
   QrCode,
-  Banknote,
   ShieldCheck,
   CheckCircle2,
   ReceiptText,
@@ -33,7 +32,6 @@ export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [canteenQris, setCanteenQris] = useState<string>("/images/qris-code.svg");
   const [ready, setReady] = useState(false);
-  const [pay, setPay] = useState("QRIS");
   const [file, setFile] = useState<File | null>(null);
   const [prev, setPrev] = useState("");
   const [proof, setProof] = useState("");
@@ -117,7 +115,7 @@ export default function CartPage() {
         body: JSON.stringify({
           canteen_id: cart.canteen_id,
           items: cart.items.map((i) => ({ menu_item_id: i.menu_item_id, qty: i.qty, note: i.note || "" })),
-          payment_method: pay,
+          payment_method: "QRIS",
           payment_proof_url: proof,
         }),
       });
@@ -303,18 +301,10 @@ export default function CartPage() {
         <section className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <h3 className="font-headline-sm text-headline-sm font-extrabold text-on-surface">Metode Pembayaran</h3>
-            <span className="font-label-micro text-label-micro bg-surface-container-high px-2 py-0.5 rounded-full text-text-muted font-bold">
-              Pilih 1 Opsi
-            </span>
           </div>
 
-          <div
-            onClick={() => setPay("QRIS")}
-            className={`liquid-glass-card rounded-[18px] p-4 cursor-pointer transition-all ${
-              pay === "QRIS" ? "border-2 border-primary/50 shadow-md" : "opacity-85"
-            }`}
-          >
-            <label className="flex items-start justify-between cursor-pointer">
+          <div className="liquid-glass-card rounded-[18px] p-4 border-2 border-primary/50 shadow-md">
+            <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mt-0.5">
                   <QrCode className="w-5 h-5" />
@@ -328,102 +318,63 @@ export default function CartPage() {
                   </span>
                 </div>
               </div>
-              <div
-                className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center p-0.5 ${
-                  pay === "QRIS" ? "border-primary" : "border-outline"
-                }`}
-              >
-                {pay === "QRIS" && <div className="w-full h-full bg-primary rounded-full" />}
-              </div>
-            </label>
+            </div>
 
-            {pay === "QRIS" && (
-              <div className="mt-4 pt-3.5 border-t border-border-subtle bg-white/70 rounded-2xl p-4 flex flex-col items-center text-center gap-3 shadow-inner">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-extrabold text-on-surface">
-                    Pindai QRIS Gerai {cart.canteen_name}
+            <div className="mt-4 pt-3.5 border-t border-border-subtle bg-white/70 rounded-2xl p-4 flex flex-col items-center text-center gap-3 shadow-inner">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-extrabold text-on-surface">
+                  Pindai QRIS Gerai {cart.canteen_name}
+                </span>
+              </div>
+
+              {/* QR Code Frame */}
+              <div className="relative group p-3 bg-white rounded-2xl border-2 border-primary/20 shadow-md">
+                <img
+                  src={canteenQris || cart.qris_image_url || "/images/qris-code.svg"}
+                  alt={`Kode QRIS ${cart.canteen_name}`}
+                  className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-xl"
+                />
+                <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-text-muted font-bold">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Terverifikasi Merchant UPNVJ</span>
+                </div>
+              </div>
+
+              {/* Amount & Download Action */}
+              <div className="w-full bg-surface-container-low/80 rounded-xl p-2.5 border border-border-specular flex items-center justify-between">
+                <div className="text-left">
+                  <span className="text-[10px] text-text-muted block font-bold uppercase tracking-wider">
+                    Nominal Pas Bayar
+                  </span>
+                  <span className="text-base font-extrabold text-primary">
+                    {formatRupiah(total)}
                   </span>
                 </div>
-
-                {/* QR Code Frame */}
-                <div className="relative group p-3 bg-white rounded-2xl border-2 border-primary/20 shadow-md">
-                  <img
-                    src={canteenQris || cart.qris_image_url || "/images/qris-code.svg"}
-                    alt={`Kode QRIS ${cart.canteen_name}`}
-                    className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-xl"
-                  />
-                  <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-text-muted font-bold">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Terverifikasi Merchant UPNVJ</span>
-                  </div>
-                </div>
-
-                {/* Amount & Download Action */}
-                <div className="w-full bg-surface-container-low/80 rounded-xl p-2.5 border border-border-specular flex items-center justify-between">
-                  <div className="text-left">
-                    <span className="text-[10px] text-text-muted block font-bold uppercase tracking-wider">
-                      Nominal Pas Bayar
-                    </span>
-                    <span className="text-base font-extrabold text-primary">
-                      {formatRupiah(total)}
-                    </span>
-                  </div>
-                  <a
-                    href={canteenQris || cart.qris_image_url || "/images/qris-code.svg"}
-                    download={`QRIS-${cart.canteen_name.replace(/\s+/g, "_")}.png`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1.5 rounded-full bg-white hover:bg-surface-container border border-border-specular text-xs font-bold text-on-surface flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
-                  >
-                    <Download className="w-3.5 h-3.5 text-primary" />
-                    <span>Unduh QR</span>
-                  </a>
-                </div>
-
-                <div className="w-full bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-left text-[11px] text-text-muted space-y-1">
-                  <p className="font-bold text-on-surface flex items-center gap-1">
-                    <Info className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span>Petunjuk Pembayaran:</span>
-                  </p>
-                  <ol className="list-decimal list-inside space-y-0.5 text-[10px] pl-1">
-                    <li>Pindai QR di atas menggunakan GoPay, OVO, BCA, Mandiri, dll.</li>
-                    <li>Pastikan nominal transfer sesuai: <b>{formatRupiah(total)}</b>.</li>
-                    <li>Simpan tangkapan layar bukti transfer dan unggah pada formulir di bawah.</li>
-                  </ol>
-                </div>
+                <a
+                  href={canteenQris || cart.qris_image_url || "/images/qris-code.svg"}
+                  download={`QRIS-${cart.canteen_name.replace(/\s+/g, "_")}.png`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-full bg-white hover:bg-surface-container border border-border-specular text-xs font-bold text-on-surface flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+                >
+                  <Download className="w-3.5 h-3.5 text-primary" />
+                  <span>Unduh QR</span>
+                </a>
               </div>
-            )}
-          </div>
 
-          <div
-            onClick={() => setPay("TUNAI")}
-            className={`liquid-glass-card rounded-[18px] p-3.5 cursor-pointer transition-all ${
-              pay === "TUNAI" ? "border-2 border-primary/50 shadow-md" : "opacity-75"
-            }`}
-          >
-            <label className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-surface-container-high border flex items-center justify-center text-text-muted">
-                  <Banknote className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="font-headline-sm text-headline-sm font-extrabold text-on-surface block">
-                    Tunai di Loket
-                  </span>
-                  <span className="font-body-sm text-body-sm text-text-muted block">
-                    Bayar langsung saat mengambil pesanan
-                  </span>
-                </div>
+              <div className="w-full bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-left text-[11px] text-text-muted space-y-1">
+                <p className="font-bold text-on-surface flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span>Petunjuk Pembayaran:</span>
+                </p>
+                <ol className="list-decimal list-inside space-y-0.5 text-[10px] pl-1">
+                  <li>Pindai QR di atas menggunakan GoPay, OVO, BCA, Mandiri, dll.</li>
+                  <li>Pastikan nominal transfer sesuai: <b>{formatRupiah(total)}</b>.</li>
+                  <li>Simpan tangkapan layar bukti transfer dan unggah pada formulir di bawah.</li>
+                </ol>
               </div>
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center p-0.5 ${
-                  pay === "TUNAI" ? "border-primary" : "border-outline"
-                }`}
-              >
-                {pay === "TUNAI" && <div className="w-full h-full bg-primary rounded-full" />}
-              </div>
-            </label>
+            </div>
           </div>
         </section>
 

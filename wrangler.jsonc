@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vetabite",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "hyperdrive": [
+    { "binding": "HYPERDRIVE", "id": "e1fca7afcfad4a8381194a0d1b6732ba" }
+  ],
+  "observability": { "enabled": true },
+  "placement": { "mode": "smart" },
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "vetabite.my.id", "custom_domain": true },
+    { "pattern": "www.vetabite.my.id", "custom_domain": true }
+  ],
+  "vars": {
+    "NODE_ENV": "production"
+  }
+}

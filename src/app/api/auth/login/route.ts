@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { verifyPassword, createSession, redirectFor } from '@/lib/auth';
+import { verifyPassword, hashPassword, createSession, redirectFor } from '@/lib/auth';
 import { jsonOk, jsonErr, zodMsg } from '@/lib/api';
 const S=z.object({
   username:z.string().min(1,{message:'Username wajib diisi.'}),
@@ -33,6 +33,10 @@ export async function POST(req:Request){
     return jsonErr('OAUTH_ACCOUNT', 'Akun ini terdaftar via Google SSO Mahasiswa. Silakan masuk menggunakan Akun Google (@mahasiswa.upnvj.ac.id).', 400);
   }
   if (!(await verifyPassword(b.password, u.password_hash))) return jsonErr('UNAUTHORIZED', 'Username atau kata sandi salah.', 401);
+  if (!u.password_hash.startsWith('pbkdf2$')) {
+    // Upgrade hash bcrypt lama ke PBKDF2 agar login berikutnya ringan di Workers
+    await prisma.user.update({ where: { id: u.id }, data: { password_hash: await hashPassword(b.password) } });
+  }
   await createSession(u.id, b.remember_me);
   return jsonOk({user:{id:u.id,username:u.username,full_name:u.full_name,role:u.role,status:u.status},redirectTo:redirectFor(u)});
  }catch(e:unknown){ if(e instanceof z.ZodError) return jsonErr('VALIDATION_ERROR',zodMsg(e),400); return jsonErr('SERVER_ERROR','Terjadi kesalahan server.',500); }

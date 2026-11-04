@@ -107,11 +107,12 @@ export function StudentReadyNotificationPopup() {
     };
   }, [triggerReadyBanner]);
 
-  // Polling pengecekan status pesanan aktif (setiap 5 detik)
+  // Polling pengecekan status pesanan aktif (setiap 15 detik, selama tab terlihat)
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
 
     const checkActiveOrders = async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         const orders = await api<OrderItemApi[]>("/api/orders");
         if (!Array.isArray(orders)) return;
@@ -134,7 +135,7 @@ export function StudentReadyNotificationPopup() {
     };
 
     checkActiveOrders();
-    timer = setInterval(checkActiveOrders, 5000);
+    timer = setInterval(checkActiveOrders, 15000);
 
     return () => clearInterval(timer);
   }, [triggerReadyBanner, isAcked]);
