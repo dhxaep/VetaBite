@@ -12,7 +12,7 @@ generator client {
 
 // Role: MAHASISWA | PENJUAL | ADMIN
 // AccountStatus: ACTIVE | PENDING | REJECTED | INACTIVE
-// PaymentMethod: QRIS | TUNAI ; PaymentStatus: BELUM_DIBAYAR | SUDAH_DIBAYAR
+// PaymentMethod: QRIS (TUNAI hanya ada di data pesanan lama) ; PaymentStatus: BELUM_DIBAYAR | SUDAH_DIBAYAR
 // OrderStatus: ANTRIAN | MASAK | SIAP_AMBIL | PICKED_UP | DIBATALKAN ; TicketStatus: BARU | DIPROSES | SELESAI
 
 model User {

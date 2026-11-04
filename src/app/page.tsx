@@ -75,7 +75,7 @@ export default function Welcome() {
                 <Smartphone className="w-4 h-4" />
               </div>
               <span className="text-label-sm font-label-sm text-on-surface leading-tight">Bayar Praktis</span>
-              <span className="text-label-micro font-label-micro text-text-muted mt-0.5">QRIS &amp; Cash</span>
+              <span className="text-label-micro font-label-micro text-text-muted mt-0.5">Lewat QRIS</span>
             </div>
             <div className="liquid-glass-card rounded-2xl p-2.5 flex flex-col items-center justify-center text-center">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1.5">

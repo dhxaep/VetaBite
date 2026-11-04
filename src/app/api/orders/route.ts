@@ -16,7 +16,7 @@ const S = z.object({
       })
     )
     .min(1, { message: 'Pilih minimal satu menu.' }),
-  payment_method: z.enum(['QRIS', 'TUNAI']).default('QRIS'),
+  payment_method: z.enum(['QRIS']).default('QRIS'),
   payment_proof_url: z.string().min(1, { message: 'Bukti pembayaran wajib diunggah sebelum pesanan diproses.' }),
 });
 
