@@ -6,8 +6,17 @@ export const dynamic = "force-dynamic";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
+// Cache API Cloudflare; tidak tersedia saat next dev di Node
+function edgeCache(): Cache | null {
+  return (globalThis as { caches?: { default?: Cache } }).caches?.default ?? null;
+}
+
 export async function GET(req: Request) {
   try {
+    const cache = edgeCache();
+    const hit = await cache?.match(req.url);
+    if (hit) return hit;
+
     const url = new URL(req.url);
     const assetKey = url.searchParams.get("asset") || "thumbnail";
     const dbKey = assetKey === "favicon" ? "asset_favicon" : "asset_thumbnail";
@@ -29,12 +38,14 @@ export async function GET(req: Request) {
       }
 
       const buf = Buffer.from(base64Data, "base64");
-      return new Response(buf, {
+      const res = new Response(buf, {
         headers: {
           "Content-Type": mimeType,
           "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
         },
       });
+      await cache?.put(req.url, res.clone());
+      return res;
     }
 
     // Fallback: logo default dari aset statis public/LOGO.jpeg

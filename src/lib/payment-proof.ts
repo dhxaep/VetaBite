@@ -1,6 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import { unlink } from 'fs/promises';
-import path from 'path';
 
 export const PROOF_EXPIRATION_MS = 2 * 24 * 60 * 60 * 1000; // 2 hari (48 jam)
 
@@ -25,15 +23,19 @@ export function isPaymentProofExpired(order: {
   return Date.now() - completedTime >= PROOF_EXPIRATION_MS;
 }
 
+let lastExpireRun = 0;
+const EXPIRE_INTERVAL_MS = 60 * 60 * 1000;
+
 /**
- * Membersihkan bukti transfer yang sudah lewat dari 2 hari setelah pesanan diselesaikan pemilik kantin
+ * Membersihkan bukti transfer yang sudah lewat dari 2 hari setelah pesanan diselesaikan pemilik kantin.
+ * Dibatasi sekali per jam karena dipanggil dari endpoint yang di-polling.
  */
 export async function expireOldPaymentProofs(): Promise<number> {
+  if (Date.now() - lastExpireRun < EXPIRE_INTERVAL_MS) return 0;
+  lastExpireRun = Date.now();
   try {
     const twoDaysAgo = new Date(Date.now() - PROOF_EXPIRATION_MS);
-
-    // Cari pesanan selesai yang sudah lebih dari 2 hari dan masih memiliki payment_proof_url
-    const expiredOrders = await prisma.order.findMany({
+    const updated = await prisma.order.updateMany({
       where: {
         order_status: { in: ['PICKED_UP', 'SELESAI'] },
         payment_proof_url: { not: '' },
@@ -42,39 +44,27 @@ export async function expireOldPaymentProofs(): Promise<number> {
           { picked_up_at: null, updated_at: { lte: twoDaysAgo } },
         ],
       },
-      select: {
-        id: true,
-        payment_proof_url: true,
-      },
+      data: { payment_proof_url: '' },
     });
-
-    if (expiredOrders.length === 0) return 0;
-
-    // Hapus file fisik jika tersimpan di disk lokal /uploads/proof-*
-    for (const ord of expiredOrders) {
-      if (ord.payment_proof_url && ord.payment_proof_url.startsWith('/uploads/')) {
-        const filePath = path.join(process.cwd(), 'public', ord.payment_proof_url);
-        try {
-          await unlink(filePath);
-        } catch {
-          // File mungkin sudah dihapus atau dijalankan di serverless readonly
-        }
-      }
-    }
-
-    // Set payment_proof_url menjadi string kosong di database
-    const updated = await prisma.order.updateMany({
-      where: {
-        id: { in: expiredOrders.map((o) => o.id) },
-      },
-      data: {
-        payment_proof_url: '',
-      },
-    });
-
     return updated.count;
   } catch (err) {
     console.error('Error in expireOldPaymentProofs:', err);
     return 0;
   }
+}
+
+/**
+ * Daftar id pesanan yang punya bukti transfer, tanpa memuat isi gambarnya.
+ */
+export async function ordersWithProof(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await prisma.order.findMany({
+    where: { id: { in: ids }, payment_proof_url: { not: '' } },
+    select: { id: true },
+  });
+  return new Set(rows.map((r) => r.id));
+}
+
+export function proofUrl(orderId: string) {
+  return `/api/orders/${orderId}/proof`;
 }

@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { ownerCanteen } from '@/lib/owner';
 import { jsonOk, jsonErr } from '@/lib/api';
-import { expireOldPaymentProofs, isPaymentProofExpired } from '@/lib/payment-proof';
+import { expireOldPaymentProofs, isPaymentProofExpired, ordersWithProof, proofUrl } from '@/lib/payment-proof';
 
 export async function GET(req: Request) {
   const s = await getSession();
@@ -22,20 +22,23 @@ export async function GET(req: Request) {
       ...(st && allowed.includes(st) ? { order_status: st } : {}),
     },
     orderBy: { ordered_at: 'desc' },
+    omit: { payment_proof_url: true },
     include: {
       order_items: true,
       buyer: { select: { id: true, full_name: true, username: true, email: true } },
     },
   });
 
+  const withProof = await ordersWithProof(os.map((o) => o.id));
+
   const mapped = os.map((o) => {
     const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
-    const isExpired = isPaymentProofExpired(o) || !o.payment_proof_url;
+    const isExpired = isPaymentProofExpired(o) || !withProof.has(o.id);
     return {
       ...o,
       buyer_name: o.buyer?.full_name || 'Mahasiswa',
       buyer_nim: nim,
-      payment_proof_url: isExpired ? '' : o.payment_proof_url,
+      payment_proof_url: isExpired ? '' : proofUrl(o.id),
       proof_expired: isExpired,
       created_at: o.ordered_at ? o.ordered_at.toISOString() : o.created_at.toISOString(),
       items: o.order_items.map((it) => ({

@@ -81,10 +81,10 @@ export default function OrderHistoryPage() {
   useEffect(() => {
     load(true);
 
-    // Auto reload berkala setiap 4 detik (Auto-sync)
+    // Auto reload berkala setiap 30 detik selama tab terlihat (Auto-sync)
     const timer = setInterval(() => {
-      load(false);
-    }, 4000);
+      if (document.visibilityState === "visible") load(false);
+    }, 30000);
 
     const onVisible = () => {
       if (document.visibilityState === "visible") load(false);

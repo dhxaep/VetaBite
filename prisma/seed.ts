@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client"; import { hashPassword } from "../src/lib/password";
-const prisma = new PrismaClient();
+import { PrismaClient } from "@prisma/client"; import { PrismaPg } from "@prisma/adapter-pg"; import { hashPassword } from "../src/lib/password";
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 async function main(){
   const adminPw = await hashPassword("Admin123!");
   const sellerPw = await hashPassword("Kantin123!");

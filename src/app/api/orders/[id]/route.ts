@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { jsonOk, jsonErr } from '@/lib/api';
-import { isPaymentProofExpired } from '@/lib/payment-proof';
+import { isPaymentProofExpired, ordersWithProof, proofUrl } from '@/lib/payment-proof';
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const s = await getSession();
@@ -10,6 +10,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const id = resolved.id;
   const o = await prisma.order.findUnique({
     where: { id },
+    omit: { payment_proof_url: true },
     include: {
       order_items: true,
       canteen: { select: { name: true, queue_prefix: true } },
@@ -19,12 +20,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   if (!o) return jsonErr('NOT_FOUND', 'Pesanan tidak ditemukan.', 404);
   if (o.buyer_id !== s.uid && s.role === 'MAHASISWA') return jsonErr('FORBIDDEN', 'Tidak memiliki hak akses.', 403);
   const nim = o.buyer?.username || (o.buyer?.email ? o.buyer.email.split('@')[0] : '') || '-';
-  const isExpired = isPaymentProofExpired(o) || !o.payment_proof_url;
+  const withProof = await ordersWithProof([o.id]);
+  const isExpired = isPaymentProofExpired(o) || !withProof.has(o.id);
   return jsonOk({
     ...o,
     buyer_name: o.buyer?.full_name || 'Mahasiswa',
     buyer_nim: nim,
-    payment_proof_url: isExpired ? '' : o.payment_proof_url,
+    payment_proof_url: isExpired ? '' : proofUrl(o.id),
     proof_expired: isExpired,
   });
 }

@@ -101,12 +101,12 @@ export default function PesananPage() {
     }
   }, []);
 
-  // Auto reload berkala setiap 4 detik (Auto-sync) + saat tab dibuka/fokus
+  // Auto reload berkala setiap 10 detik selama tab terlihat (Auto-sync) + saat tab dibuka/fokus
   useEffect(() => {
     load();
     const reloadTimer = setInterval(() => {
-      load();
-    }, 4000);
+      if (document.visibilityState === "visible") load();
+    }, 10000);
 
     const onVisible = () => {
       if (document.visibilityState === "visible") load();
