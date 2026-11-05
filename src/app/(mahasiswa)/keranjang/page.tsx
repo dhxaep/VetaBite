@@ -26,7 +26,6 @@ import { loadCart, saveCart, clearCart, cartTotal, Cart } from "@/lib/cart";
 import { formatRupiah } from "@/lib/rupiah";
 import { api } from "@/lib/api";
 import { EmptyState, ErrorState } from "@/components/shared/States";
-import imageCompression from "browser-image-compression";
 
 export default function CartPage() {
   const r = useRouter();
@@ -83,21 +82,8 @@ export default function CartPage() {
     setPrev(URL.createObjectURL(f));
     setUp(true);
     try {
-      let uploadFile = f;
-      try {
-        // Kompresi ringan di sisi klien sebelum pengiriman jaringan
-        uploadFile = await imageCompression(f, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1400,
-          useWebWorker: true,
-        });
-      } catch {
-        // Jika kompresi browser gagal, tetap lanjutkan dengan file asli
-        uploadFile = f;
-      }
-
       const fd = new FormData();
-      fd.append("file", uploadFile);
+      fd.append("file", f);
       const res = await fetch("/api/uploads/payment-proof", {
         method: "POST",
         body: fd,
@@ -110,7 +96,7 @@ export default function CartPage() {
         throw new Error(`Gagal memproses bukti bayar (HTTP ${res.status}).`);
       }
       if (!res.ok || j.success === false) throw new Error(j?.error?.message || "Gagal mengunggah bukti.");
-      setProof(j.data.fileUrl || j.data.path);
+      setProof(j.data.fileUrl);
     } catch (err: unknown) {
       setE(err instanceof Error ? err.message : String(err));
       setProof("");
@@ -470,15 +456,9 @@ export default function CartPage() {
                 </>
               )}
 
-              <div className="flex flex-col gap-1 text-left font-body-sm text-body-sm text-text-muted pt-1">
-                <div className="flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  <span>Pastikan nominal {formatRupiah(total)} dan waktu transfer terbaca jelas.</span>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] text-text-muted/80">
-                  <ShieldCheck className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  <span>Bukti pembayaran otomatis hangus dan dihapus dari server 5 jam setelah diunggah.</span>
-                </div>
+              <div className="flex items-center gap-1 font-body-sm text-body-sm text-text-muted pt-1">
+                <Info className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <span>Pastikan nominal {formatRupiah(total)} dan waktu transfer terbaca jelas.</span>
               </div>
             </div>
           </div>

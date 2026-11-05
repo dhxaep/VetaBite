@@ -21,7 +21,6 @@ import {
 import { api } from "@/lib/api";
 import { formatRupiah } from "@/lib/format";
 import { LoadingList, Empty, ErrorBox } from "@/components/States";
-import { resolveImageUrl } from "@/lib/image-url";
 
 type M = {
   id: string;
@@ -364,7 +363,7 @@ export default function StatusTokoPage() {
 
         <div className="relative w-full aspect-[16/7] rounded-[20px] overflow-hidden border border-border-specular shadow-inner group bg-surface-container">
           {c.banner_url ? (
-            <img src={resolveImageUrl(c.banner_url)} alt={`Banner ${c.name}`} loading="lazy" className="w-full h-full object-cover" />
+            <img src={c.banner_url} alt={`Banner ${c.name}`} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-text-muted text-xs gap-1.5">
               <ImagePlus size={32} />
@@ -415,9 +414,8 @@ export default function StatusTokoPage() {
         <div className="bg-white/80 rounded-[22px] p-4 border border-border-specular flex flex-col sm:flex-row items-center gap-4 shadow-inner">
           <div className="relative group p-2.5 bg-white rounded-2xl border-2 border-primary/20 shadow-sm shrink-0 text-center">
             <img
-              src={resolveImageUrl(c.qris_image_url, "/images/qris-code.svg")}
+              src={c.qris_image_url || "/images/qris-code.svg"}
               alt={`QRIS ${c.name}`}
-              loading="lazy"
               className="w-36 h-36 object-contain rounded-xl"
             />
             <div className="mt-1.5">
@@ -545,7 +543,7 @@ export default function StatusTokoPage() {
                 className="liquid-glass rounded-[22px] p-3.5 flex items-center gap-3.5 border border-border-specular shadow-sm transition-all"
               >
                 {m.photo_url ? (
-                  <img src={resolveImageUrl(m.photo_url)} alt={m.name} loading="lazy" className="w-16 h-16 rounded-2xl object-cover border shrink-0 bg-white" />
+                  <img src={m.photo_url} alt={m.name} className="w-16 h-16 rounded-2xl object-cover border shrink-0 bg-white" />
                 ) : (
                   <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center text-text-muted shrink-0 border border-border-specular">
                     <UtensilsCrossed size={22} />
@@ -692,9 +690,8 @@ export default function StatusTokoPage() {
                 <div className="flex items-center gap-3">
                   {modal.photo_url ? (
                     <img
-                      src={resolveImageUrl(modal.photo_url)}
+                      src={modal.photo_url}
                       alt="Pratinjau"
-                      loading="lazy"
                       className="w-16 h-16 rounded-xl object-cover border bg-white shadow-sm shrink-0"
                     />
                   ) : (

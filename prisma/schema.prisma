@@ -96,7 +96,6 @@ model Order {
   total_price Int
   payment_method String @default("QRIS")
   payment_proof_url String
-  payment_proof_expires_at DateTime?
   payment_status String @default("BELUM_DIBAYAR")
   order_status String @default("ANTRIAN")
   can_pickup Boolean @default(false)
@@ -111,7 +110,6 @@ model Order {
   @@index([canteen_id, ordered_at])
   @@index([canteen_id, order_status])
   @@index([buyer_id, ordered_at])
-  @@index([payment_proof_expires_at])
 }
 
 model OrderItem {

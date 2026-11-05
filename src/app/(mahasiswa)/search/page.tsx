@@ -7,7 +7,6 @@ import { Search, X, Plus, History, Trash2, ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatRupiah } from "@/lib/rupiah";
 import { SkeletonList, EmptyState, ErrorState } from "@/components/shared/States";
-import { resolveImageUrl } from "@/lib/image-url";
 
 type Hit = {
   id?: string;
@@ -191,11 +190,10 @@ export default function SearchPage() {
               <div className="relative w-[88px] h-[88px] rounded-[14px] overflow-hidden flex-shrink-0 bg-surface-dim">
                 <img
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
-                  loading="lazy"
-                  src={resolveImageUrl(
-                    c.photo_url,
-                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
-                  )}
+                  src={
+                    c.photo_url ||
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuDONUCpglL6jc-58eEFB9jmnxQIbojv28_kmIw_3_cOique7XHmwaWM2_GidCmfRafjTuZJaorhpiVxsItRpSbieUWQT8jR0crmX2VGi-m2rj1-150lHILHHQBL8twqncJOSKjfIhXCKvgpqHIvzCvs6sutxYWCrwTJ2_LKQlZFkQJokJfZVsJJX0fM0GO-EHibCrRrHOrqJVecR6roeobFxvqyhFeJWm4-LDX1oyFb"
+                  }
                   alt={c.name}
                 />
                 <div className="absolute top-1.5 left-1.5 bg-emerald-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">

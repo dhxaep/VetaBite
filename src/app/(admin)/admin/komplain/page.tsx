@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { LoadingList, Empty, ErrorBox } from "@/components/States";
-import { resolveImageUrl } from "@/lib/image-url";
 
 type M = {
   id: string;
@@ -407,9 +406,8 @@ export default function KomplainPage() {
                         <p className="text-xs text-on-surface leading-relaxed">{m.body}</p>
                         {m.photo_url && (
                           <img
-                            src={resolveImageUrl(m.photo_url)}
+                            src={m.photo_url}
                             alt="Bukti Foto"
-                            loading="lazy"
                             className="w-24 h-24 rounded-xl object-cover mt-2 border border-border-specular shadow-sm"
                           />
                         )}

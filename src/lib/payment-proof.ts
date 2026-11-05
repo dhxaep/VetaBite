@@ -1,130 +1,70 @@
 import { prisma } from '@/lib/prisma';
-import { PAYMENT_PROOF_TTL_HOURS, PAYMENT_PROOF_TTL_MS, deleteImage, getSignedProofUrl } from '@/lib/storage/image';
 
-export { PAYMENT_PROOF_TTL_HOURS, PAYMENT_PROOF_TTL_MS };
+export const PROOF_EXPIRATION_MS = 2 * 24 * 60 * 60 * 1000; // 2 hari (48 jam)
 
 /**
- * Memeriksa apakah bukti transfer suatu pesanan sudah hangus (5 jam setelah diunggah)
+ * Memeriksa apakah bukti transfer suatu pesanan sudah hangus (2 hari setelah diselesaikan pemilik kantin)
  */
 export function isPaymentProofExpired(order: {
-  payment_proof_expires_at?: Date | string | null;
-  payment_proof_url?: string | null;
-  created_at?: Date | string | null;
-  ordered_at?: Date | string | null;
+  order_status?: string | null;
+  picked_up_at?: Date | string | null;
+  updated_at?: Date | string | null;
 }): boolean {
-  if (!order.payment_proof_url || order.payment_proof_url === '') return true;
+  const isCompleted = order.order_status === 'PICKED_UP' || order.order_status === 'SELESAI';
+  if (!isCompleted) return false;
 
-  if (order.payment_proof_expires_at) {
-    return new Date(order.payment_proof_expires_at).getTime() <= Date.now();
-  }
-
-  // Fallback untuk pesanan lama yang belum memiliki payment_proof_expires_at:
-  // Acuan adalah ordered_at atau created_at + 5 jam
-  const baseTime = order.ordered_at
-    ? new Date(order.ordered_at).getTime()
-    : order.created_at
-    ? new Date(order.created_at).getTime()
+  const completedTime = order.picked_up_at
+    ? new Date(order.picked_up_at).getTime()
+    : order.updated_at
+    ? new Date(order.updated_at).getTime()
     : null;
 
-  if (!baseTime) return false;
-  return Date.now() - baseTime >= PAYMENT_PROOF_TTL_MS;
+  if (!completedTime) return false;
+  return Date.now() - completedTime >= PROOF_EXPIRATION_MS;
 }
 
-/**
- * Menghitung sisa waktu aktif bukti pembayaran dalam format teks yang ramah pengguna.
- * Contoh: "Hangus dalam 3 jam 12 menit" atau "Bukti pembayaran sudah dihapus".
- */
-export function formatRemainingProofTime(expiresAt?: Date | string | null): string {
-  if (!expiresAt) return 'Bukti pembayaran sudah dihapus';
-  const remainingMs = new Date(expiresAt).getTime() - Date.now();
-  if (remainingMs <= 0) return 'Bukti pembayaran sudah dihapus';
-
-  const totalMinutes = Math.floor(remainingMs / (60 * 1000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours > 0) {
-    return `Hangus dalam ${hours} jam ${minutes} menit`;
-  }
-  return `Hangus dalam ${minutes} menit`;
-}
+let lastExpireRun = 0;
+const EXPIRE_INTERVAL_MS = 60 * 60 * 1000;
 
 /**
- * Membersihkan bukti transfer yang sudah lewat 5 jam sejak diunggah.
- * Menghapus file fisik dari Supabase Storage (bucket payment-proofs) lalu mengosongkan kolom database.
+ * Membersihkan bukti transfer yang sudah lewat dari 2 hari setelah pesanan diselesaikan pemilik kantin.
+ * Dibatasi sekali per jam karena dipanggil dari endpoint yang di-polling.
  */
-export async function expireOldPaymentProofs(batchSize = 50): Promise<{ processed: number; deleted: number; errors: number }> {
-  const now = new Date();
-  let deletedCount = 0;
-  let errorCount = 0;
-
+export async function expireOldPaymentProofs(): Promise<number> {
+  if (Date.now() - lastExpireRun < EXPIRE_INTERVAL_MS) return 0;
+  lastExpireRun = Date.now();
   try {
-    const expiredOrders = await prisma.order.findMany({
+    const twoDaysAgo = new Date(Date.now() - PROOF_EXPIRATION_MS);
+    const updated = await prisma.order.updateMany({
       where: {
+        order_status: { in: ['PICKED_UP', 'SELESAI'] },
         payment_proof_url: { not: '' },
         OR: [
-          { payment_proof_expires_at: { lte: now } },
-          {
-            payment_proof_expires_at: null,
-            created_at: { lte: new Date(Date.now() - PAYMENT_PROOF_TTL_MS) },
-          },
+          { picked_up_at: { lte: twoDaysAgo } },
+          { picked_up_at: null, updated_at: { lte: twoDaysAgo } },
         ],
       },
-      select: {
-        id: true,
-        payment_proof_url: true,
-      },
-      take: batchSize,
+      data: { payment_proof_url: '' },
     });
-
-    for (const order of expiredOrders) {
-      try {
-        // Hapus berkas fisik dari bucket 'payment-proofs' jika berupa path storage
-        if (order.payment_proof_url && !order.payment_proof_url.startsWith('data:')) {
-          await deleteImage('payment-proofs', order.payment_proof_url);
-        }
-
-        // Update database: kosongkan bukti dan waktu kadaluarsa (jangan ubah status pesanan!)
-        await prisma.order.update({
-          where: { id: order.id },
-          data: {
-            payment_proof_url: '',
-            payment_proof_expires_at: null,
-          },
-        });
-        deletedCount++;
-      } catch (err) {
-        console.error(`Gagal menghapus bukti pembayaran expired untuk order ${order.id}:`, err);
-        errorCount++;
-      }
-    }
-
-    return { processed: expiredOrders.length, deleted: deletedCount, errors: errorCount };
+    return updated.count;
   } catch (err) {
-    console.error('Error saat expireOldPaymentProofs:', err);
-    return { processed: 0, deleted: deletedCount, errors: errorCount + 1 };
+    console.error('Error in expireOldPaymentProofs:', err);
+    return 0;
   }
 }
 
 /**
- * Daftar id pesanan yang punya bukti transfer aktif (belum hangus).
+ * Daftar id pesanan yang punya bukti transfer, tanpa memuat isi gambarnya.
  */
 export async function ordersWithProof(ids: string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set();
   const rows = await prisma.order.findMany({
-    where: {
-      id: { in: ids },
-      payment_proof_url: { not: '' },
-      OR: [
-        { payment_proof_expires_at: { gt: new Date() } },
-        { payment_proof_expires_at: null },
-      ],
-    },
+    where: { id: { in: ids }, payment_proof_url: { not: '' } },
     select: { id: true },
   });
   return new Set(rows.map((r) => r.id));
 }
 
-export function proofUrl(orderId: string): string {
+export function proofUrl(orderId: string) {
   return `/api/orders/${orderId}/proof`;
 }

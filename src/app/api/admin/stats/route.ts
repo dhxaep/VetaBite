@@ -13,23 +13,13 @@ export async function GET(req: Request) {
 
   const os = await prisma.order.findMany({
     where: { ordered_at: { gte: since } },
-    select: {
-      total_price: true,
-      buyer_id: true,
-      ordered_at: true,
-    },
+    include: { canteen: true },
   });
 
   const canteensList = await prisma.canteen.findMany({
-    select: {
-      id: true,
-      name: true,
-      is_open: true,
+    include: {
       orders: {
         where: { ordered_at: { gte: since } },
-        select: {
-          total_price: true,
-        },
       },
     },
   });

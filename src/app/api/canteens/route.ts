@@ -15,22 +15,8 @@ export async function GET(req: Request) {
         owner: { status: 'ACTIVE' },
       },
       include: {
-        menu_items: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            category: true,
-            description: true,
-            photo_url: true,
-            is_available: true,
-            is_bestseller: true,
-          },
-        },
-        orders: {
-          where: { order_status: { in: ['ANTRIAN', 'MASAK'] } },
-          select: { id: true },
-        },
+        menu_items: true,
+        orders: { where: { order_status: { in: ['ANTRIAN', 'MASAK'] } } },
       },
     });
 
