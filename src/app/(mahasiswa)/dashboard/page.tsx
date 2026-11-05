@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Heart,
@@ -36,6 +37,7 @@ type C = {
 };
 
 export default function Dash() {
+  const router = useRouter();
   const [cs, setCs] = useState<C[] | null>(null);
   const [e, setE] = useState("");
   const [cat, setCat] = useState("Semua");
@@ -45,7 +47,8 @@ export default function Dash() {
 
   // Recommended Canteens Carousel
   const [activeSlide, setActiveSlide] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchMoved, setTouchMoved] = useState(false);
 
   async function load() {
     setE("");
@@ -89,19 +92,33 @@ export default function Dash() {
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
+    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchMoved(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const diff = touchStartX - e.targetTouches[0].clientX;
+    if (Math.abs(diff) > 10) {
+      setTouchMoved(true);
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStart === null) return;
+    if (touchStartX === null) return;
     const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
+    const diff = touchStartX - touchEnd;
     if (diff > 45) {
       setActiveSlide((prev) => (prev + 1) % slides.length);
     } else if (diff < -45) {
       setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
     }
-    setTouchStart(null);
+    setTouchStartX(null);
+  };
+
+  const handleSlideClick = (canteenId: string) => {
+    if (touchMoved) return;
+    router.push(`/kantin/${canteenId}`);
   };
 
   const cats = ["Semua", "Makanan", "Minuman", "Camilan"];
@@ -191,20 +208,21 @@ export default function Dash() {
           </div>
         ) : (
           <div
-            className="relative w-full aspect-[16/7] rounded-[22px] overflow-hidden border border-border-specular shadow-md group"
+            className="relative w-full aspect-[16/7] rounded-[22px] overflow-hidden border border-border-specular shadow-md group select-none"
             onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Carousel Slides */}
-            {slides.map((slide, idx) => {
-              const isActive = idx === activeSlide;
-              return (
-                <Link
+            {/* Carousel Slides Reel (True Horizontal Slide Animation) */}
+            <div
+              className="flex w-full h-full transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+            >
+              {slides.map((slide) => (
+                <div
                   key={slide.id}
-                  href={`/kantin/${slide.id}`}
-                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out cursor-pointer ${
-                    isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
-                  }`}
+                  onClick={() => handleSlideClick(slide.id)}
+                  className="relative w-full h-full flex-shrink-0 cursor-pointer"
                 >
                   <img
                     alt={slide.name}
@@ -213,11 +231,12 @@ export default function Dash() {
                       slide.banner_url ||
                       "https://lh3.googleusercontent.com/aida-public/AB6AXuA9O0X2Eh8UOrZooEZ3B2x24a6rWYOFTlMPrR37YWMZpn8LMBWo1bzWA-aODFrP2maFLVoMbg6EhUVscXgsFl61klQYZR--Gd9amGbqw6-Ttag1IrszA07kI1rfvGH5vDdyAn0xLwwlTLAWch6DveNXBAh4vZKfk5GNKA_eUZguy0Oki61JnwByJCdB5YTBfj4kZ54KPkqCWye2ptMsNx-R9yDVBoFPJmbWD7iThqgd"
                     }
+                    draggable={false}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
 
                   {/* Top Badges */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
                     <span
                       className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase backdrop-blur-md border border-white/40 flex items-center gap-1 shadow-sm ${
                         slide.is_open ? "bg-emerald-600/90 text-white" : "bg-zinc-700/90 text-zinc-200"
@@ -232,7 +251,7 @@ export default function Dash() {
                   </div>
 
                   {/* Bottom Text Info */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 pointer-events-none">
                     <div className="min-w-0 flex-1">
                       <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider block truncate">
                         {slide.sample_items || "Menu Favorit Mahasiswa"}
@@ -241,14 +260,14 @@ export default function Dash() {
                         {slide.name}
                       </h2>
                     </div>
-                    <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-white bg-primary text-xs font-extrabold shadow-md active:scale-95 transition-transform">
+                    <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-white bg-primary text-xs font-extrabold shadow-md active:scale-95 transition-transform pointer-events-auto">
                       <span>Pesan</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                </Link>
-              );
-            })}
+                </div>
+              ))}
+            </div>
 
             {/* Left / Right Navigation Controls */}
             {slides.length > 1 && (
@@ -412,10 +431,12 @@ export default function Dash() {
                   </div>
                   <p className="font-body-sm text-body-sm text-text-muted line-clamp-1">
                     <strong className="text-on-surface font-semibold">
-                      Menjual:
+                      Pilihan Menu:
                     </strong>{" "}
                     {c.sample_items ||
-                      (c.description && !c.description.toLowerCase().includes("kantin gedung")
+                      (c.description &&
+                      !c.description.toLowerCase().includes("gedung") &&
+                      !c.description.toLowerCase().includes("loket")
                         ? c.description
                         : "Ayam Geprek, Ayam Cabe Ijo, Mie Goreng, Nasi Padang")}
                   </p>

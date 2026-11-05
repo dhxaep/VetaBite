@@ -182,11 +182,6 @@ export default function CanteenDetail({ params }: { params: Promise<{ id: string
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-1.5 flex-wrap">
-                {c.queue_prefix && (
-                  <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-extrabold uppercase tracking-wide">
-                    LOKET #{String(c.queue_prefix)}
-                  </span>
-                )}
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
                   {c.is_open === false ? "Tutup" : "Buka • Siap Saji"}

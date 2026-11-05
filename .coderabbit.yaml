@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit Configuration untuk VetaBite UPNVJ
+
+language: "id-ID"
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "master"
+
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/.next/**"
+    - "!**/.open-next/**"
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!**/dist/**"
+    - "!**/build/**"
+
+  path_instructions:
+    - path: "src/app/api/**"
+      instructions: |
+        Tinjau Route Handler API Next.js:
+        1. Pastikan validasi otorisasi (session/cookie/RBAC) selalu ada di server.
+        2. Pastikan input divalidasi dengan benar sebelum query Prisma.
+        3. Hindari kebocoran data sensitif seperti password_hash.
+    - path: "src/app/**"
+      instructions: |
+        Tinjau komponen UI React / Next.js:
+        1. Patuhi aturan ZERO EMOJI (gunakan SVG Icon / Lucide React, dilarang emoji di teks atau tombol).
+        2. Pastikan styling mendukung tema Light & Dark mode dengan specular highlights Liquid Glass.
+        3. Pastikan penanganan responsif pada mobile viewport (390px - 430px) hingga desktop.
+    - path: "prisma/**"
+      instructions: |
+        Tinjau schema Prisma:
+        Pastikan integritas relasi antar model (User, Canteen, MenuItem, Order, OrderItem) tetap terjaga.
+
+chat:
+  auto_reply: true
