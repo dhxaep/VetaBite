@@ -45,6 +45,8 @@ type O = {
   items: { name: string; qty: number; note?: string; price?: number }[];
   payment_proof_url?: string;
   proof_expired?: boolean;
+  proof_expires_at?: string;
+  remaining_proof_text?: string;
   total_price: number;
   estimated_minutes?: number;
 };
@@ -470,7 +472,7 @@ export default function PesananPage() {
                   ) : o.proof_expired ? (
                     <div className="px-2.5 py-1 rounded-xl bg-surface-container-high/60 border border-border-subtle flex items-center gap-1.5 text-text-muted text-[10px]">
                       <Clock3 size={12} className="text-text-muted" />
-                      <span>Bukti Hangus (2 Hari)</span>
+                      <span>Bukti Hangus (5 Jam)</span>
                     </div>
                   ) : null}
                 </div>
@@ -620,19 +622,19 @@ export default function PesananPage() {
                 <div className="w-full h-56 rounded-2xl overflow-hidden border bg-white">
                   <img src={proof.payment_proof_url} alt="Bukti bayar" className="w-full h-full object-contain p-2" />
                 </div>
-                <p className="text-[10px] text-text-muted text-center flex items-center justify-center gap-1">
-                  <Clock3 size={11} className="text-primary" />
-                  <span>Bukti transfer akan otomatis hangus 2 hari setelah pesanan diselesaikan.</span>
+                <p className="text-[11px] text-primary font-medium text-center flex items-center justify-center gap-1.5">
+                  <Clock3 size={13} className="text-primary shrink-0" />
+                  <span>{proof.remaining_proof_text || "Bukti transfer akan otomatis hangus 5 jam setelah diunggah."}</span>
                 </p>
               </div>
             ) : (
               <div className="w-full py-8 rounded-2xl bg-surface-container-low/70 border border-border-subtle flex flex-col items-center justify-center text-center p-4 gap-2">
-                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-surface-container-high text-text-muted flex items-center justify-center">
                   <Clock3 size={20} />
                 </div>
-                <p className="text-xs font-bold text-on-surface">Bukti Transfer Telah Hangus</p>
+                <p className="text-xs font-bold text-on-surface">Bukti Pembayaran Sudah Dihapus</p>
                 <p className="text-[11px] text-text-muted leading-relaxed">
-                  Bukti transfer QRIS pesanan ini telah otomatis dihapus karena telah melewati batas masa simpan 2 hari setelah pesanan diselesaikan pemilik kantin.
+                  Berkas bukti transfer QRIS pesanan ini telah otomatis dihapus secara permanen oleh sistem karena telah melewati batas masa simpan 5 jam.
                 </p>
               </div>
             )}

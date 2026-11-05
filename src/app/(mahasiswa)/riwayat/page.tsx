@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { saveCart } from "@/lib/cart";
 import { formatRupiah } from "@/lib/rupiah";
 import { SkeletonList, EmptyState, ErrorState } from "@/components/shared/States";
+import { resolveImageUrl } from "@/lib/image-url";
 
 type OrderItem = {
   menu_item_id?: string;
@@ -256,12 +257,12 @@ export default function OrderHistoryPage() {
 
               <div className="flex items-center gap-3">
                 <img
-                  src={
-                    first?.photo_url ||
-                    (o as { canteen_banner?: string }).canteen_banner ||
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuDONUCpglL6jc-58eEFB9jmnxQIbojv28_kmIw_3_cOique7XHmwaWM2_GidCmfRafjTuZJaorhpiVxsItRpSbieUWQT8jR0crmX2VGi-m2rj1-150lHILHHQBL8twqncJOSKjfIhXCKvgpqHIvzCvs6sutxYWCrwTJ2_LKQlZFkQJokJfZVsJJX0fM0GO-EHibCrRrHOrqJVecR6roeobFxvqyhFeJWm4-LDX1oyFb"
-                  }
+                  src={resolveImageUrl(
+                    first?.photo_url || (o as { canteen_banner?: string }).canteen_banner,
+                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+                  )}
                   alt={first?.name || first?.name_snapshot || "Menu"}
+                  loading="lazy"
                   className="w-16 h-16 rounded-[14px] object-cover border border-border-specular shadow-sm flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">

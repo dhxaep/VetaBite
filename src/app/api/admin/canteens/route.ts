@@ -23,7 +23,22 @@ export async function GET(req: Request) {
         ? { role: 'PENJUAL', status: { in: ['REJECTED', 'INACTIVE'] } }
         : { role: 'PENJUAL', status: st }
       : { role: 'PENJUAL' },
-    include: { canteen: true },
+    select: {
+      id: true,
+      full_name: true,
+      username: true,
+      whatsapp: true,
+      status: true,
+      created_at: true,
+      canteen: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          banner_url: true,
+        },
+      },
+    },
     orderBy: { created_at: 'desc' },
   });
 

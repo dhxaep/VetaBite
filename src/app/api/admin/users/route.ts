@@ -67,11 +67,23 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Fetch live users from Supabase
+    // Fetch live users from Supabase with explicit select (hemat egress bandwidth)
     const dbUsers = await prisma.user.findMany({
       where,
-      include: {
-        canteen: true,
+      select: {
+        id: true,
+        full_name: true,
+        username: true,
+        role: true,
+        status: true,
+        whatsapp: true,
+        created_at: true,
+        canteen: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: { created_at: "desc" },
     });

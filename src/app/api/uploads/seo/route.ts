@@ -1,22 +1,12 @@
 import { getSession } from "@/lib/auth";
 import { jsonOk, jsonErr } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
+import { processAndUploadImage, MAX_FILE_SIZE_BYTES } from "@/lib/storage/image";
 
 export const dynamic = "force-dynamic";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-
-// Cache API Cloudflare; tidak tersedia saat next dev di Node
-function edgeCache(): Cache | null {
-  return (globalThis as { caches?: { default?: Cache } }).caches?.default ?? null;
-}
-
 export async function GET(req: Request) {
   try {
-    const cache = edgeCache();
-    const hit = await cache?.match(req.url);
-    if (hit) return hit;
-
     const url = new URL(req.url);
     const assetKey = url.searchParams.get("asset") || "thumbnail";
     const dbKey = assetKey === "favicon" ? "asset_favicon" : "asset_thumbnail";
@@ -26,29 +16,31 @@ export async function GET(req: Request) {
     });
 
     if (config?.value) {
-      let mimeType = assetKey === "favicon" ? "image/png" : "image/jpeg";
-      let base64Data = config.value;
+      // Jika sudah berupa URL Supabase Storage atau URL publik, redirect langsung
+      if (config.value.startsWith("http://") || config.value.startsWith("https://")) {
+        return Response.redirect(new URL(config.value), 302);
+      }
 
+      // Fallback data lama base64
       if (config.value.startsWith("data:")) {
+        let mimeType = assetKey === "favicon" ? "image/png" : "image/jpeg";
+        let base64Data = config.value;
         const match = config.value.match(/^data:([^;]+);base64,(.+)$/);
         if (match) {
           mimeType = match[1];
           base64Data = match[2];
         }
+        const buf = Buffer.from(base64Data, "base64");
+        return new Response(buf, {
+          headers: {
+            "Content-Type": mimeType,
+            "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        });
       }
-
-      const buf = Buffer.from(base64Data, "base64");
-      const res = new Response(buf, {
-        headers: {
-          "Content-Type": mimeType,
-          "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-        },
-      });
-      await cache?.put(req.url, res.clone());
-      return res;
     }
 
-    // Fallback: logo default dari aset statis public/LOGO.jpeg
+    // Fallback logo statis default
     return Response.redirect(new URL("/LOGO.jpeg", req.url), 302);
   } catch (err) {
     console.error("GET /api/uploads/seo error:", err);
@@ -68,42 +60,42 @@ export async function POST(req: Request) {
     const kind = (fd.get("kind") as string) || "thumbnail";
 
     if (!f) return jsonErr("VALIDATION_ERROR", "File gambar wajib dipilih.", 400);
-    if (f.size > MAX_SIZE) return jsonErr("VALIDATION_ERROR", "Ukuran file gambar maksimal 5 MB.", 400);
-
-    const buf = Buffer.from(await f.arrayBuffer());
-    let ext = "png";
-    const type = f.type.toLowerCase();
-
-    if (type.includes("jpeg") || type.includes("jpg")) ext = "jpg";
-    else if (type.includes("png")) ext = "png";
-    else if (type.includes("webp")) ext = "webp";
-    else if (type.includes("svg")) ext = "svg";
-    else if (type.includes("icon") || type.includes("ico") || f.name.endsWith(".ico")) ext = "ico";
-
-    const mimeType = f.type || (ext === "ico" ? "image/x-icon" : ext === "svg" ? "image/svg+xml" : `image/${ext}`);
-    const base64Uri = `data:${mimeType};base64,${buf.toString("base64")}`;
+    if (f.size > MAX_FILE_SIZE_BYTES) return jsonErr("VALIDATION_ERROR", "Ukuran file gambar maksimal 5 MB.", 400);
 
     const assetKey = kind === "favicon" ? "favicon" : "thumbnail";
     const dbKey = assetKey === "favicon" ? "asset_favicon" : "asset_thumbnail";
+    const buf = Buffer.from(await f.arrayBuffer());
 
-    // Simpan gambar langsung ke database SiteConfig agar persisten di Vercel Serverless
+    // Upload ke bucket public 'images' di Supabase Storage
+    const uploadResult = await processAndUploadImage(buf, {
+      kind: 'site',
+      id: assetKey,
+    });
+
+    // Simpan URL Supabase Storage ke SiteConfig
     await prisma.siteConfig.upsert({
       where: { key: dbKey },
       update: {
-        value: base64Uri,
+        value: uploadResult.url || '',
         updatedAt: new Date(),
       },
       create: {
         key: dbKey,
-        value: base64Uri,
+        value: uploadResult.url || '',
         description: `Aset gambar SEO untuk ${assetKey}`,
       },
     });
 
-    const fileUrl = `/api/uploads/seo?asset=${assetKey}&v=${Date.now()}`;
-    return jsonOk({ fileUrl }, 201);
+    return jsonOk(
+      {
+        fileUrl: uploadResult.url,
+        asset: assetKey,
+      },
+      201
+    );
   } catch (err: unknown) {
     console.error("POST /api/uploads/seo error:", err);
-    return jsonErr("SERVER_ERROR", "Terjadi kesalahan saat memproses file unggahan SEO.", 500);
+    const message = err instanceof Error ? err.message : "Terjadi kesalahan saat memproses gambar SEO.";
+    return jsonErr("SERVER_ERROR", message, 500);
   }
 }

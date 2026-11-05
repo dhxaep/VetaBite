@@ -23,6 +23,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@/components/shared/States";
+import { resolveImageUrl } from "@/lib/image-url";
 
 type C = {
   id: string;
@@ -227,10 +228,11 @@ export default function Dash() {
                   <img
                     alt={slide.name}
                     className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                    src={
-                      slide.banner_url ||
-                      "https://lh3.googleusercontent.com/aida-public/AB6AXuA9O0X2Eh8UOrZooEZ3B2x24a6rWYOFTlMPrR37YWMZpn8LMBWo1bzWA-aODFrP2maFLVoMbg6EhUVscXgsFl61klQYZR--Gd9amGbqw6-Ttag1IrszA07kI1rfvGH5vDdyAn0xLwwlTLAWch6DveNXBAh4vZKfk5GNKA_eUZguy0Oki61JnwByJCdB5YTBfj4kZ54KPkqCWye2ptMsNx-R9yDVBoFPJmbWD7iThqgd"
-                    }
+                    loading="lazy"
+                    src={resolveImageUrl(
+                      slide.banner_url,
+                      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+                    )}
                     draggable={false}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
@@ -385,10 +387,11 @@ export default function Dash() {
                   <img
                     alt={c.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                    src={
-                      c.banner_url ||
-                      "https://lh3.googleusercontent.com/aida-public/AB6AXuA9O0X2Eh8UOrZooEZ3B2x24a6rWYOFTlMPrR37YWMZpn8LMBWo1bzWA-aODFrP2maFLVoMbg6EhUVscXgsFl61klQYZR--Gd9amGbqw6-Ttag1IrszA07kI1rfvGH5vDdyAn0xLwwlTLAWch6DveNXBAh4vZKfk5GNKA_eUZguy0Oki61JnwByJCdB5YTBfj4kZ54KPkqCWye2ptMsNx-R9yDVBoFPJmbWD7iThqgd"
-                    }
+                    loading="lazy"
+                    src={resolveImageUrl(
+                      c.banner_url,
+                      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+                    )}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { LoadingList, Empty, ErrorBox } from "@/components/States";
+import { resolveImageUrl } from "@/lib/image-url";
 
 type K = {
   id: string;
@@ -501,8 +502,9 @@ export default function VerifikasiPage() {
                   <div className="relative group rounded-2xl overflow-hidden border border-border-specular bg-surface-container aspect-[4/3] flex items-center justify-center p-3 text-center">
                     {sel.banner_url ? (
                       <img
-                        src={sel.banner_url}
+                        src={resolveImageUrl(sel.banner_url)}
                         alt="Banner Loket"
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     ) : (

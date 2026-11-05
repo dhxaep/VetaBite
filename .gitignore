@@ -15,4 +15,7 @@ client_secret*.json
 *.json.secret
 
 
+backup-images-*.json
+backup-tables-*.json
+*.dump
 .dev.vars

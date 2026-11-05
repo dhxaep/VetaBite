@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { resolveImageUrl } from "@/lib/image-url";
 
 type UserData = {
   id: string;
@@ -185,7 +186,7 @@ export default function ProfilePage() {
   const studentEmail =
     me?.email ||
     (me?.username?.includes("@") ? me.username : `${me?.username || "mahasiswa"}@mahasiswa.upnvj.ac.id`);
-  const avatarSrc = me?.avatar_url || DEFAULT_AVATAR;
+  const avatarSrc = resolveImageUrl(me?.avatar_url, DEFAULT_AVATAR);
 
   return (
     <div className="relative min-h-screen bg-background-base text-on-surface antialiased selection:bg-primary selection:text-on-primary">
@@ -339,6 +340,7 @@ export default function ProfilePage() {
                   <img
                     className="w-full h-full object-cover"
                     alt={studentName}
+                    loading="lazy"
                     src={avatarSrc}
                   />
                 </div>

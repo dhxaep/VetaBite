@@ -1,9 +1,11 @@
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { jsonOk, jsonErr, zodMsg } from '@/lib/api';
 import { publishCanteen } from '@/lib/sse';
 import { expireOldPaymentProofs, isPaymentProofExpired, ordersWithProof, proofUrl } from '@/lib/payment-proof';
+import { PAYMENT_PROOF_TTL_MS, processAndUploadImage } from '@/lib/storage/image';
 
 const S = z.object({
   canteen_id: z.string().min(1, { message: 'Kantin wajib dipilih.' }),
@@ -60,6 +62,7 @@ export async function GET() {
       buyer_nim: nim,
       payment_proof_url: isExpired ? '' : proofUrl(o.id),
       proof_expired: isExpired,
+      proof_expires_at: o.payment_proof_expires_at,
       canteen_name: o.canteen?.name,
       canteen_banner: o.canteen?.banner_url,
       items: o.order_items.map((it) => ({
@@ -117,6 +120,19 @@ export async function POST(req: Request) {
     const total = b.items.reduce((a, it) => a + menus.find((x) => x.id === it.menu_item_id)!.price * it.qty, 0);
     const d = today();
 
+    // Pastikan bukti bayar tidak disimpan sebagai base64 ke database
+    let finalProofPath = b.payment_proof_url;
+    if (finalProofPath.startsWith('data:')) {
+      const match = finalProofPath.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        const buf = Buffer.from(match[2], 'base64');
+        const uploadRes = await processAndUploadImage(buf, { kind: 'payment_proof', id: randomUUID() });
+        finalProofPath = uploadRes.path;
+      }
+    }
+
+    const proofExpiresAt = new Date(Date.now() + PAYMENT_PROOF_TTL_MS);
+
     const o = await prisma.$transaction(async (tx) => {
       const c = await tx.queueCounter.upsert({
         where: { canteen_id_date: { canteen_id: b.canteen_id, date: d } },
@@ -131,7 +147,8 @@ export async function POST(req: Request) {
           queue_number: qn,
           total_price: total,
           payment_method: b.payment_method,
-          payment_proof_url: b.payment_proof_url,
+          payment_proof_url: finalProofPath,
+          payment_proof_expires_at: proofExpiresAt,
           order_items: {
             create: b.items.map((it) => {
               const m = menus.find((x) => x.id === it.menu_item_id)!;

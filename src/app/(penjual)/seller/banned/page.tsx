@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { LoadingList, ErrorBox } from "@/components/States";
+import { resolveImageUrl } from "@/lib/image-url";
 
 interface BanItem {
   user_id: string;
@@ -430,7 +431,8 @@ export default function SellerAccountAndBannedPage() {
             {profile.avatar_url ? (
               <img
                 className="w-full h-full object-cover"
-                src={profile.avatar_url}
+                loading="lazy"
+                src={resolveImageUrl(profile.avatar_url)}
                 alt={profile.full_name}
               />
             ) : (
@@ -477,8 +479,9 @@ export default function SellerAccountAndBannedPage() {
                   <div className="w-full h-full bg-[#faede6] rounded-full flex items-center justify-center font-extrabold text-[22px] text-primary overflow-hidden">
                     {profile.avatar_url ? (
                       <img
-                        src={profile.avatar_url}
+                        src={resolveImageUrl(profile.avatar_url)}
                         alt={profile.full_name}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     ) : (

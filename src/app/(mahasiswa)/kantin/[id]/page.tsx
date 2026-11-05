@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { loadCart, saveCart, cartTotal, cartCount, Cart } from "@/lib/cart";
 import { formatRupiah } from "@/lib/rupiah";
 import { SkeletonList, EmptyState, ErrorState } from "@/components/shared/States";
+import { resolveImageUrl } from "@/lib/image-url";
 
 type Menu = {
   id: string;
@@ -151,7 +152,11 @@ export default function CanteenDetail({ params }: { params: Promise<{ id: string
         <img
           alt={String(c.name ?? "Kantin")}
           className="w-full h-full object-cover scale-105"
-          src={String(c.banner_url ?? c.banner ?? "https://images.unsplash.com/photo-1546069901-ba9599a7e63c")}
+          loading="lazy"
+          src={resolveImageUrl(
+            typeof c.banner_url === "string" ? c.banner_url : typeof c.banner === "string" ? c.banner : null,
+            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+          )}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
 
@@ -293,17 +298,18 @@ export default function CanteenDetail({ params }: { params: Promise<{ id: string
             <div className="relative w-[88px] h-[88px] rounded-[14px] overflow-hidden flex-shrink-0 bg-surface-container">
               <img
                 alt={m.name}
+                loading="lazy"
                 className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out ${
                   m.is_available === false ? "grayscale" : ""
                 }`}
-                src={
-                  m.photo_url ||
-                  (m.category === "Minuman"
-                    ? "https://lh3.googleusercontent.com/aida-public/AB6AXuDE3roTy4e-Ia2y-1-RBpFR9bMGp6wnGQ_VBGC87apMJwkKQMjcqIUlRqjWCZF-OV5C7-4aj2aIvNPLWGwDBa2sh1mAq-XgLESAlc7hogRfvH19UHK6fKo3pOLFCTHmyWqf9syNZcBWc4EHyPD8TAqFSD7lMyXnvElmWOKfwWbbwG_miX21SPPJp4ciqRfwjSXrObkVM8vncvrTPnglr6RPnQKtUy1h5VbxW4w_naTg"
+                src={resolveImageUrl(
+                  m.photo_url,
+                  m.category === "Minuman"
+                    ? "https://images.unsplash.com/photo-1544787219-7f47ccb76574"
                     : m.category === "Camilan"
-                    ? "https://lh3.googleusercontent.com/aida-public/AB6AXuCD-A-r10q-wEpuP4Hh_4nTQbValSaxtG7wVQY8HXjX1DXkQ7IMxllH0glCPClnw2GRus8bu8c1ik9WSpu-CVMlokdrodkLV-E-AvByMFd4oALb9-FLO1mf2ZiC3DJuHh76CA8U_ZT6LwAuN00_t9gndfNZLp3y8D7NXDxUPWdTDjay04IYzL_mmCNV_ANcKd5ECvfsKCOG48ROin1BF67QBWGpNGAXNNQNVyEhiCBl"
-                    : "https://lh3.googleusercontent.com/aida-public/AB6AXuDONUCpglL6jc-58eEFB9jmnxQIbojv28_kmIw_3_cOique7XHmwaWM2_GidCmfRafjTuZJaorhpiVxsItRpSbieUWQT8jR0crmX2VGi-m2rj1-150lHILHHQBL8twqncJOSKjfIhXCKvgpqHIvzCvs6sutxYWCrwTJ2_LKQlZFkQJokJfZVsJJX0fM0GO-EHibCrRrHOrqJVecR6roeobFxvqyhFeJWm4-LDX1oyFb")
-                }
+                    ? "https://images.unsplash.com/photo-1582293041079-7814c2f12063"
+                    : "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+                )}
               />
               {m.is_bestseller && (
                 <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-amber-500/90 text-white font-label-micro text-label-micro font-extrabold flex items-center space-x-0.5 shadow-sm">

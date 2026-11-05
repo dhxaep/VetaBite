@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { ownerCanteen } from '@/lib/owner';
 import { jsonOk, jsonErr } from '@/lib/api';
-import { expireOldPaymentProofs, isPaymentProofExpired, ordersWithProof, proofUrl } from '@/lib/payment-proof';
+import { expireOldPaymentProofs, isPaymentProofExpired, ordersWithProof, proofUrl, formatRemainingProofTime } from '@/lib/payment-proof';
 
 export async function GET(req: Request) {
   const s = await getSession();
@@ -40,6 +40,8 @@ export async function GET(req: Request) {
       buyer_nim: nim,
       payment_proof_url: isExpired ? '' : proofUrl(o.id),
       proof_expired: isExpired,
+      proof_expires_at: o.payment_proof_expires_at,
+      remaining_proof_text: formatRemainingProofTime(o.payment_proof_expires_at),
       created_at: o.ordered_at ? o.ordered_at.toISOString() : o.created_at.toISOString(),
       items: o.order_items.map((it) => ({
         name: it.name_snapshot,

@@ -21,7 +21,18 @@ export async function GET(req: Request) {
       ordered_at: { gte: since },
       order_status: { not: 'DIBATALKAN' },
     },
-    include: { order_items: true },
+    select: {
+      total_price: true,
+      ordered_at: true,
+      order_items: {
+        select: {
+          menu_item_id: true,
+          name_snapshot: true,
+          qty: true,
+          price_snapshot: true,
+        },
+      },
+    },
     orderBy: { ordered_at: 'asc' },
   });
 

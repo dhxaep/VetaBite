@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { jsonOk, jsonErr, zodMsg } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { processAndUploadImage } from "@/lib/storage/image";
 
 export const dynamic = "force-dynamic";
 
@@ -31,16 +32,28 @@ const DEFAULT_SEO = {
   googleSiteVerification: "dXyCTujHqvHHCebNQyx1nmNHQ_jucXVnrH9wPuc6Zqs",
 };
 
+type SeoSettings = typeof DEFAULT_SEO;
+
+let seoConfigCache: { data: SeoSettings; timestamp: number } | null = null;
+const SEO_CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit cache in-memory
+
 export async function GET() {
+  if (seoConfigCache && Date.now() - seoConfigCache.timestamp < SEO_CACHE_TTL_MS) {
+    return jsonOk(seoConfigCache.data);
+  }
+
   try {
     const existing = await prisma.siteConfig.findFirst({
       where: { key: "seo" },
+      select: { value: true },
     });
 
     if (existing?.value) {
       try {
         const parsed = JSON.parse(existing.value);
-        return jsonOk({ ...DEFAULT_SEO, ...parsed });
+        const result = { ...DEFAULT_SEO, ...parsed };
+        seoConfigCache = { data: result, timestamp: Date.now() };
+        return jsonOk(result);
       } catch {
         return jsonOk(DEFAULT_SEO);
       }
@@ -63,24 +76,34 @@ export async function POST(req: Request) {
     const raw = await req.json();
     const parsed = SEOSchema.parse(raw);
 
-    // Jika user mengirimkan data URI base64, simpan langsung ke aset SiteConfig terpisah
+    // Jika user mengirimkan data URI base64, proses dan upload ke Supabase Storage
     if (parsed.faviconUrl && parsed.faviconUrl.startsWith("data:")) {
-      await prisma.siteConfig.upsert({
-        where: { key: "asset_favicon" },
-        update: { value: parsed.faviconUrl, updatedAt: new Date() },
-        create: { key: "asset_favicon", value: parsed.faviconUrl, description: "Aset Favicon SEO" },
-      });
-      parsed.faviconUrl = `/api/uploads/seo?asset=favicon&v=${Date.now()}`;
+      const match = parsed.faviconUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        const buf = Buffer.from(match[2], "base64");
+        const res = await processAndUploadImage(buf, { kind: "site", id: "favicon" });
+        parsed.faviconUrl = res.url || "";
+        await prisma.siteConfig.upsert({
+          where: { key: "asset_favicon" },
+          update: { value: parsed.faviconUrl, updatedAt: new Date() },
+          create: { key: "asset_favicon", value: parsed.faviconUrl, description: "Aset Favicon SEO" },
+        });
+      }
     }
 
     if (parsed.thumbnailUrl && parsed.thumbnailUrl.startsWith("data:")) {
-      await prisma.siteConfig.upsert({
-        where: { key: "asset_thumbnail" },
-        update: { value: parsed.thumbnailUrl, updatedAt: new Date() },
-        create: { key: "asset_thumbnail", value: parsed.thumbnailUrl, description: "Aset Thumbnail OG SEO" },
-      });
-      parsed.thumbnailUrl = `/api/uploads/seo?asset=thumbnail&v=${Date.now()}`;
-      parsed.ogImageUrl = parsed.thumbnailUrl;
+      const match = parsed.thumbnailUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        const buf = Buffer.from(match[2], "base64");
+        const res = await processAndUploadImage(buf, { kind: "site", id: "thumbnail" });
+        parsed.thumbnailUrl = res.url || "";
+        parsed.ogImageUrl = parsed.thumbnailUrl;
+        await prisma.siteConfig.upsert({
+          where: { key: "asset_thumbnail" },
+          update: { value: parsed.thumbnailUrl, updatedAt: new Date() },
+          create: { key: "asset_thumbnail", value: parsed.thumbnailUrl, description: "Aset Thumbnail OG SEO" },
+        });
+      }
     }
 
     if (parsed.ogImageUrl && parsed.ogImageUrl.startsWith("data:")) {
@@ -100,6 +123,9 @@ export async function POST(req: Request) {
         description: "Pengaturan SEO, Favicon, dan OpenGraph VetaBite",
       },
     });
+
+    // Invalidate in-memory cache
+    seoConfigCache = null;
 
     return jsonOk({
       success: true,
